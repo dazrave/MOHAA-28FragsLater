@@ -4,7 +4,6 @@
 *.csv
 *.shader
 
-sound/amb
 sound/amb_stereo
 sound/dialogue
 sound/mechanics

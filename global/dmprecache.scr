@@ -1,94 +1,83 @@
 //Check to make sure dmprecache is never loaded more than once... :)
 
-if(level.dmpreloaded)
-end
+if(level.dmpreloaded) {
+    end
+}
 
 level.dmpreloaded = 1
 
 
 // CACHED ITEMS
 
-cache models/player/allied_airborne.tik
-cache models/player/allied_manon.tik
-cache models/player/allied_pilot.tik
-cache models/player/allied_sas.tik
-cache models/player/american_army.tik
-cache models/player/american_ranger.tik
-cache models/player/german_afrika_officer.tik
-cache models/player/german_afrika_private.tik
-cache models/player/german_elite_officer.tik
-cache models/player/german_elite_sentry.tik
-cache models/player/german_kradshutzen.tik
-cache models/player/german_panzer_grenadier.tik
-cache models/player/german_panzer_obershutze.tik
-cache models/player/german_panzer_shutze.tik
-cache models/player/german_panzer_tankcommander.tik
-cache models/player/german_scientist.tik
-cache models/player/german_waffenss_officer.tik
-cache models/player/german_waffenss_shutze.tik
-cache models/player/german_wehrmacht_officer.tik
-cache models/player/german_wehrmacht_soldier.tik
-cache models/player/german_winter_1.tik
-cache models/player/german_winter_2.tik
-cache models/player/german_worker.tik
-
-cache models/weapons/bar.tik
-cache models/weapons/bazooka.tik
 cache models/weapons/colt45.tik
+cache models/weapons/p38.tik
+cache models/weapons/silencedpistol.tik
+cache models/weapons/m1_garand.tik
 cache models/weapons/kar98.tik
 cache models/weapons/kar98sniper.tik
-cache models/weapons/m1_garand.tik
-cache models/weapons/m2frag_grenade.tik
-cache models/weapons/m2frag_grenade_sp.tik
-cache models/weapons/m2frag_grenade_sp_start.tik
+cache models/weapons/springfield.tik
+cache models/weapons/thompsonsmg.tik
 cache models/weapons/mp40.tik
 cache models/weapons/mp44.tik
-cache models/weapons/p38.tik
+cache models/weapons/bar.tik
+cache models/weapons/bazooka.tik
 cache models/weapons/panzerschreck.tik
 cache models/weapons/shotgun.tik
-cache models/weapons/silencedpistol.tik
-cache models/weapons/springfield.tik
+cache models/weapons/m2frag_grenade.tik
 cache models/weapons/steilhandgranate.tik
-cache models/weapons/steilhandgranate_start.tik
-cache models/weapons/thompsonsmg.tik
-cache models/ammo/us_bomb.tik
-cache models/equipment/ushelmet_medic.tik
-cache models/vehicles/kingtank_all_d.tik
-cache models/vehicles/opeltruck_d.tik
-cache models/vehicles/panzer_iv_d.tik
-cache models/vehicles/panzer_iv_eud.tik
-cache models/vehicles/sdkfz_desert_d.tik
-cache models/vehicles/sdkfz_green_d.tik
-cache models/vehicles/shermantank_damaged.tik
-cache models/vehicles/tigertank_d.tik
 
-cache models/fx/dummy.tik
-cache models/statweapons/nebelwerfer.tik
-cache models/vehicles/panzer_tank.tik
-cache models/vehicles/panzer_cannon.tik
-cache models/vehicles/shermantank.tik
-cache models/vehicles/tigertank.tik
-cache models/vehicles/tigercannon.tik
-cache models/vehicles/panzer_tank_europe.tik
-cache models/vehicles/panzer_cannon_europe.tik
-cache models/vehicles/kingtank.tik
-cache models/vehicles/kingcannon.tik
-cache models/items/pulse_explosive.tik
-cache models/items/explosive.tik
-cache models/animate/wall_exploder.tik
-cache models/emitters/explosion_bombmetalwall.tik
-cache models/statweapons/nebelwerfer_d.tik
-cache models/vehicles/jeep.tik
-cache models/animate/fire.tik
-cache models/statweapons/flak88base.tik
-cache models/statweapons/flak88turret.tik
-cache models/statweapons/flak88_d.tik
-cache models/statweapons/mg42_gun.tik
-cache models/statweapons/mg42_gun_fake.tik
-cache models/vehicles/sdkfz.tik
+cache models/player/allied_airborne.tik
+cache models/player/allied_airborne_fps.tik
+cache models/player/allied_manon.tik
+cache models/player/allied_manon_fps.tik
+cache models/player/allied_oss.tik
+cache models/player/allied_oss_fps.tik
+cache models/player/allied_pilot.tik
+cache models/player/allied_pilot_fps.tik
 
-cache models/vehicles/vehiclesoundentity.tik
+cache models/player/american_army.tik
+cache models/player/american_army_fps.tik
+cache models/player/american_ranger.tik
+cache models/player/american_ranger_fps.tik
+
+cache models/player/german_afrika_officer.tik
+cache models/player/german_afrika_officer_fps.tik
+cache models/player/german_afrika_private.tik
+cache models/player/german_afrika_private_fps.tik
+cache models/player/german_elite_gestapo.tik
+cache models/player/german_elite_gestapo_fps.tik
+cache models/player/german_elite_sentry.tik
+cache models/player/german_elite_sentry_fps.tik
+cache models/player/german_elite_sentry_fps.tik
+cache models/player/german_kradshutzen.tik
+cache models/player/german_kradshutzen_fps.tik
+cache models/player/german_panzer_grenadier.tik
+cache models/player/german_panzer_grenadier_fps.tik
+cache models/player/german_panzer_obershutze.tik
+cache models/player/german_panzer_obershutze_fps.tik
+cache models/player/german_panzer_shutze.tik
+cache models/player/german_panzer_shutze_fps.tik
+cache models/player/german_panzer_tankcommander.tik
+cache models/player/german_panzer_tankcommander_fps.tik
+cache models/player/german_scientist.tik
+cache models/player/german_scientist_fps.tik
+cache models/player/german_waffenss_officer.tik
+cache models/player/german_waffenss_officer_fps.tik
+cache models/player/german_waffenss_shutze.tik
+cache models/player/german_waffenss_shutze_fps.tik
+cache models/player/german_wehrmacht_officer.tik
+cache models/player/german_wehrmacht_officer_fps.tik
+cache models/player/german_wehrmacht_soldier.tik
+cache models/player/german_wehrmacht_soldier_fps.tik
+cache models/player/german_winter1.tik
+cache models/player/german_winter1_fps.tik
+cache models/player/german_winter2.tik
+cache models/player/german_winter2_fps.tik
+cache models/player/german_worker.tik
+cache models/player/german_worker_fps.tik
+
 // End of Cached Items
 
-// Custom Stuff
-exec 28fragslater/28fragslater.scr
+// Start the 28 Frags Later script!
+// exec global/28fragslater.scr
+exec global/infection.scr

@@ -1,0 +1,600 @@
+// 28 Frags Later Mod
+// Written by Ophis
+// With help by Falco
+// Contact: ophis@daphi.co.uk
+//
+// Special thanks:
+
+main:
+
+    println "[DEBUG] Starting Script."
+
+// Make sure the script is NOT already running
+    if (level.isRunning) {
+        println "[DEBUG] Script Already Running. Terminating."
+        end
+    } else {
+        level.isRunning = 1
+    }
+
+// Make sure TDM is running
+    if (int(getcvar(g_gametype)) != 2)
+    {
+       println "[DEBUG] Improper gametype. Terminating."
+       end
+    }
+
+// Make sure there are enough players
+    /* THIS IS NOT WORKING FOR SOME REASON
+    if ($player.size < 2) // this is triggered on number of players in server, including spectate. Needs reworking.
+    {
+       println "[DEBUG] Not enough players. Terminating."
+       end
+    }
+    */
+
+// Make sure 28 Frags Later is switched on?????????
+
+// Script Version
+    level.scriptVersion = "0.6" // Version of script running
+    println "[DEBUG] Script Version: " level.scriptVersion
+
+// Survivor timelimit
+    level.survivorTimelimit = 200 // in seconds
+    println "[DEBUG] Timelimit in seconds: " level.survivorTimelimit
+
+// Set the new gametype name
+    setcvar "g_gametypestring" "28 Frags Later"
+
+    level waittill prespawn
+    println "[DEBUG] Prespawn Started"
+
+    local.master = spawn ScriptMaster
+
+// Spawn sounds here?
+
+    level waittill spawn
+    println "[DEBUG] Spawn Started"
+
+// Set special effects
+    $world farplane 1600
+    $world farplane_color ( 0 0 0 ) {}
+    $world farplane_cull 1
+
+    thread forceFastSky
+    // thread randomSoundEffects
+    thread storm
+
+// Set in game TAB information
+    setcvar "g_obj_alliedtext1" "28 Frags Later"
+    setcvar "g_obj_alliedtext2" "v0.6" // level.scriptVersion // Does this work? #################
+    setcvar "g_obj_alliedtext3" ""
+    setcvar "g_obj_axistext1" ""
+
+// Find out which chapter is running?
+    setcvar "g_obj_axistext2" ""
+    setcvar "g_obj_axistext3" ""
+
+// Set level game state?
+    level.inGame = 0
+
+    println "[DEBUG] Wait 10."
+    wait 10
+
+
+// Continous Loop
+
+    println "[DEBUG] Starting continous loop..."
+    while (1) {
+        local.inGame = 0 // Number of players in game is now ZERO
+
+        // Loop around each player
+        for (local.i = 1; local.i <= $player.size; local.i++) {
+
+            // Check if player as already looped through
+            if (!$player[local.i].isDone) {
+                $player[local.i].isDone = 1
+                $player[local.i] thread playerThinker
+            }
+
+            // If current player is alive
+            // AND current player is not Spectating
+            if (isAlive($player[local.i]) && $player[local.i].dmteam != spectator) {
+                // If current player is not survivor
+                // AND current player is on allies
+                // AND current player has spawned in game
+                if ($player[local.i] != level.survivor && $player[local.i].dmteam == allies && $player[local.i].inGame) {
+                    // THEN send current player back to axis
+                    $player[local.i] thread sendToAxis
+                }
+            }
+
+            // If current player is NOT alive
+            // OR current player is spectating
+            // AND current player is in game
+            if ((!isAlive($player[local.i]) || $player[local.i].dmteam == spectator) && $player[local.i].inGame) {
+                // THEN Set current player as dead and not in game
+                $player[local.i].isDone = 0
+                $player[local.i].inGame = 0
+            }
+
+        }
+        // end of loop
+
+        level.inGame = local.inGame // Get number of players in game
+        // println "[DEBUG] Players in Game: " level.inGame
+
+        // If there is no survivor, run selecting thread
+        if (level.survivor == NIL) {
+            waitframe // just in case
+            if (level.survivor == NIL || level.survivor == NULL) {
+                thread selectSurvivor
+            }
+        }
+        waitframe
+
+    }
+    // End of Continous Loop
+end
+
+playerThinker: // needs renaming ????????????
+    // println "[DEBUG] Running Player Thinker Thread."
+
+    self.inGame = 0 // Remove player from game
+    if (self.survivalAmount == NIL) {
+       self.survivalAmount = 0 // If they have never been survivor
+    }
+
+    // Not sure what this does yet?
+    local.trg = spawn trigger_multiple origin self.origin
+    local.trg glue self
+    local.trg.player = self
+
+    // triggers the thread that spawns the player?
+    local.trg setthread global/28fragslater.scr::spawnPlayer
+    // Waits until player dies?
+    while (self && local.trg) {
+       waitframe
+    }
+    if (local.trg) {
+       local.trg delete
+    }
+end
+
+// When a player spawns (currently includes survivor), run this script
+// Needs a major rework to NOT include survivor
+
+spawnPlayer:
+    // println "[DEBUG] Running Player Spawn Thread."
+
+    // IF something equals local player (is this the player name??????)
+    if (parm.other == self.player) {
+
+        local.player = self.player // set player name??
+        self delete // delete what???
+
+        // Random Sound trigger?
+        //local.player.sh_soundtime = level.time + 25.0 + randomfloat(15) // Level Time + 25 + (0 to 15)
+        //println "[DEBUG] Spawning Player and setting skin."
+        local.player.inGame = 1 // Set player as In Game
+        local.player join_team axis // Place player on axis
+        local.player respawn // Spawn the player
+        local.player model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
+
+        waitframe
+        //println "[DEBUG] Setting Player weapons."
+        local.player takeall // Take all weapons away from player
+        local.player item "models/weapons/colt45.tik" // Give player customised pistol NEEDS MAJOR REWORK (e.g don't use default pistol?)
+        local.player useweaponclass pistol // Pull pistol into focus
+        $player weaponcommand notdroppable // Prevent pistol from being dropped
+
+    }
+end
+
+selectSurvivor:
+    // println "[DEBUG] Selecting Survivor."
+
+    // IF selecting already running then end
+    if (level.selectingSurvivor) {
+        // println "[DEBUG] Survivor exists. Terminating."
+        end
+    }
+
+    //println "[DEBUG] Selecting Survivor. First Time."
+
+    local.inGame = 0 // remove from game?
+    local.least = 524288 // Least amount of times to be Survivor for??
+
+    // IF number is less then or equal to amount of players in game
+    // In other words, loop over script for every player in game
+    for (local.i = 1; local.i <= $player.size; local.i++) {
+
+        // If current player is in game, set local in game
+        if ($player[local.i].inGame) {
+            local.inGame++
+        }
+
+        // IF local player has NOT been survivor before...
+        if ($player[local.i].survivalAmount != NIL) { // prevent idiotic errors
+            // IF local player has been survivor less then "least"
+            if ($player[local.i].survivalAmount < local.least)
+                local.least = $player[local.i].survivalAmount
+            }
+        }
+
+        if (local.inGame < 2) { // no point in playing this on your own
+            //println "[DEBUG] Not enough players. Terminating"
+            fadein 0 0 0 0 1
+            end
+        }
+
+    // don't run this thread again
+    level.selectingSurvivor = 1
+
+    local.lastsurvivor = level.survivor
+
+selectSurvivorAgain:
+    println "[DEBUG] Selecting Survivor Again."
+    local.survivor = local.lastsurvivor
+
+    local.inGame = 0 // remove from game?
+    local.least = 524288 // Least amount of times to be Survivor for??
+
+    // IF number is less then or equal to amount of players in game
+    // In other words, loop over script for every player in game
+    for (local.i = 1; local.i <= $player.size; local.i++) {
+
+        // If current player is in game, set local in game
+        if ($player[local.i].inGame) {
+            local.inGame++
+        }
+
+        // IF local player has been survivor before...
+        if ($player[local.i].survivalAmount != NIL) { // prevent idiotic errors
+            // IF local player has been survivor less then "least"
+            if ($player[local.i].survivalAmount < local.least)
+                local.least = $player[local.i].survivalAmount
+            }
+        }
+
+        if (local.inGame < 2) { // no point in playing this on your own
+            // println "[DEBUG] Not enough players. Terminating"
+            end
+        }
+
+        while ((local.survivor == local.lastsurvivor || local.survivor.dmteam == spectator) && $player.size > 1) {
+            local.survivor = $player[randomint($player.size) + 1]
+            waitframe
+        }
+
+        if (local.survivor == NIL || local.survivor == NULL || local.survivor.survivalAmount > local.least) {
+            waitframe
+            goto selectSurvivorAgain
+        }
+
+        local.survivor.survivalAmount++ // account for the times they played the murderer for
+
+        level.survivor = local.survivor
+
+        while (!level.survivor.inGame) {
+           waitframe
+        }
+
+        level.selectingSurvivor = 0
+        level.proximityTrigger = 0
+
+        // Setup Survivor
+        println "[DEBUG] Setting up the Survivor."
+        waitframe
+        fadein 10 0 0 0 1
+        waitframe
+        local.survivor join_team allies
+        local.survivor respawn
+        waitframe
+
+        local.survivor join_team allies // make survivor join allies
+        local.survivor respawn // spawn the survivor
+        local.survivor model "models/player/allied_Magna_Cartas_police.tik" // set survivor skin (map dependant?)
+        waitframe
+
+        local.survivor takeall // take all guns
+        local.survivor give "models/weapons/shotgun.tik" // give shotgun (player number dependant?)
+        waitframe
+
+        local.survivor useweaponclass heavy // select shotgun
+        wait 5 // wait 5 seconds
+
+        local.survivor iprint "You are the last Survivor!" // message JUST the survivor
+        // $world playsound lookout // play "lookout" sound
+        waitframe
+
+        // local.survivor face ( 0 local.survivor.viewangles[1] 0 ) // WHAT DOES THIS DO?
+
+        local.survivor.survivorExpiry = level.time + level.survivorTimelimit // current level time + timelimit that's set?
+
+       // IF Survivor is alive
+       // AND Survivor is current survivor
+       // AND Survivor is on allies
+       while (isAlive(local.survivor) && level.survivor == local.survivor && local.survivor.dmteam == allies) {
+            // println "[DEBUG] Formating time."
+            // Work out the time left?
+            local.lastmin = local.min
+            local.lastsec = local.sec
+            local.sec = int(local.survivor.survivorExpiry - level.time)
+
+            // convert seconds to minutes?
+            local.min = int(local.sec / 60)
+            local.sec -= local.min * 60
+
+            // display the time
+            if (local.sec != local.lastsec || local.min != local.lastmin) {
+                // println "[DEBUG] Displaying time."
+                huddraw_alpha 107 1
+                huddraw_rect 107 500 35 640 480
+                huddraw_virtualsize 107 1
+                huddraw_font 107 courier-20
+                local.timestr = local.min + ":"
+            }
+
+            // I think this is formatting the seconds
+            if (local.sec < 10) {
+                // println "[DEBUG] Formating time a bit more."
+                local.timestr = local.timestr + "0"
+                local.timestr = local.timestr + local.sec
+            }
+
+            // this changes the time colour when there isn't much left
+            if (local.min == 0) {
+                // 30 seconds or less
+                if (local.sec <= 30 && local.sec > 10) {
+                    //println "[DEBUG] Changing time to Yellow."
+                    huddraw_color 107 1 1 0 // yellow
+                }
+                // 10 seconds or less
+                else if (local.sec <= 10) {
+                    //println "[DEBUG] Changing time to Red."
+                    huddraw_color 107 1 0 0 // red
+                }
+            }
+
+            // code from SH mod.
+            /*
+            if (local.survivor.fireheld) {
+                println "[DEBUG] Survivor has fired or right clicked: " local.survivor.fireheld
+                if (local.survivor.sh_hidden) {
+                        println "[DEBUG] [2] What does this do: " local.survivor.sh_hidden
+                }
+            }*/
+
+            // Old code from horror survival! ???????????????????????????????????????????????
+            for (local.i = 1; local.i <= $player.size; local.i++) {
+
+                if (!$player[local.i].inGame) {
+
+                    if ($player[local.i].dmteam != spectator) {
+                        // println "[DEBUG] Player not in spectator."
+                        $player[local.i] stufftext "+attackprimary"
+                        waitframe
+                        $player[local.i] stufftext "-attackprimary"
+                    }
+                    continue
+                }
+
+                if ($player[local.i].dmteam == allies) {
+                    // println "[DEBUG] [2] Has anything happened? " $player[local.i].dmteam
+                    continue
+                }
+
+                // Infected Proximity triggers to help them search for a camping survivor!
+                if (vector_length ($player[local.i].origin - local.survivor.origin) <= 500 && level.proximityTrigger == 0) {
+                    $player[local.i] stufftext "sayteam I'm close to the survivor!"
+                    local.survivor stufftext "sayteam I hear them, they are getting closer!"
+                    level.proximityTrigger = 1
+                }
+
+                while (vector_length ($player[local.i].origin - local.survivor.origin) > 500 && level.proximityTrigger == 1) {
+                    wait 20
+                    // println "[DEBUG] Proximity Trigger OFF"
+                    level.proximityTrigger = 0
+                }
+
+            }
+
+            // IF level time is more or equal to survivor time left?
+            if (level.time >= local.survivor.survivorExpiry) {
+                println "[DEBUG] Time limit has been reached: " local.timeLimitHit
+                local.timeLimitHit = 1 // time limit has been reached
+                break
+            }
+            waitframe
+
+        } // end of while loop
+
+        local.survivor.sh_hidden = 0 // is this relating to hiding/unhiding from original SH mod? Can it be removed????
+        println "[DEBUG] End of game."
+
+        // IF the timelimit has been reached (this is set with the code a few lines above)
+        // ELSE tell everyone the survivor has died
+        if (local.timeLimitHit){
+            iprintlnbold_noloc "Time limit reached!"
+        }
+        else {
+            iprintlnbold_noloc "The Survivor has been infected!"
+        }
+
+        waitframe
+        fadeout 10 0 0 0 1
+        wait 5
+        iprintlnbold_noloc "Selecting new survivor..."
+
+        println "[DEBUG] Clearing survivor settings."
+
+        local.survivor.isDone = 0 // has died?
+        local.survivor.inGame = 0 // is not in game anymore
+        huddraw_alpha 107 0 // remove the time from screen?
+
+        // If the survivor is NOT alive then keep waiting?
+        while (!isAlive(local.survivor)) {
+            println "[DEBUG] Survivor is not alive..."
+            waitframe
+            local.survivor stufftext "+attackprimary"
+            waitframe
+            local.survivor stufftext "-attackprimary"
+        }
+
+        // If the survivor is NOT on Axis
+        while (local.survivor.dmteam != axis) {
+            println "[DEBUG] Sending Survivor to axis"
+            local.survivor join_team axis // Place onto Axis
+            // local.survivor model "models/player/german_[Kapo]_Prisioner_1.tik" // Change skin
+            local.survivor respawn // spawn player!
+            waitframe
+        }
+
+        local.survivor respawn // last but not least, spawn the survivor after completely setting him up!
+        level.survivor = NIL // and finally reset?
+
+end
+// end of "survivor select again" thread
+
+
+updateTimes:
+    local.str = "" // set a blank string to use
+
+    // Loop around each player
+    for (local.i = 1; local.i <= $player.size; local.i++) {
+
+        // if there is a survival amount set...
+        if ($player[local.i].survivalAmount) {
+            local.str = local.str + string($player[local.i].entnum) + ":" + string($player[local.i].survivalAmount) + " "
+        }
+
+    }
+    game.survivors = local.str
+end
+
+sendToAxis:
+    println "[DEBUG] Switching a player to correct team."
+
+    self spectator
+    waitframe
+    self join_team axis
+    println "[DEBUG] Wait 5."
+    wait 5
+    self respawn
+    // self model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
+    waitframe
+    self takeall // Take all weapons away from player
+    self item "models/weapons/colt45.tik" // Give player customised pistol NEEDS MAJOR REWORK (e.g don't use default pistol?)
+    self useweaponclass pistol // Pull pistol into focus
+    self weaponcommand notdroppable // Prevent pistol from being dropped
+
+    self iprint "You are infected!" 1
+end
+
+forceFastSky:
+    println "[DEBUG] Starting forcefastsky."
+    wait 2
+    while (1)
+    {
+       $player stufftext "r_fastsky 1"
+       //println "[DEBUG] Forcefastsky."
+       wait 10
+    }
+end
+
+randomSoundEffects:
+    println "[DEBUG] Starting randomSoundEffects."
+    local.music[1][0] = "sound/music/mus_06a_mystery.mp3"
+    local.music[1][1] = 220
+    local.music[2][0] = "sound/music/mus_15a_mystery.mp3"
+    local.music[2][1] = 197
+    local.music[3][0] = "sound/music/mus_16a_mystery.mp3"
+    local.music[3][1] = 204
+    local.music[4][0] = "sound/music/mus_17a_mystery.mp3"
+    local.music[4][1] = 282
+    local.music[5][0] = "sound/music/mus_17b_mystery.mp3"
+    local.music[5][1] = 60
+    local.music[6][0] = "sound/music/mus_17d_mystery.mp3"
+    local.music[6][1] = 123
+    local.music[7][0] = "sound/music/mus_Schmerzen_01g.mp3"
+    local.music[7][1] = 125
+    local.music[8][0] = "sound/music/mus_SniperTown_01b.mp3"
+    local.music[8][1] = 69
+    local.music[9][0] = "sound/music/mus_SniperTown_01f.mp3"
+    local.music[9][1] = 105
+    local.last = 0
+    wait 2
+
+    while (1) {
+        local.num = randomint(local.music.size) + 1
+        while (local.num == local.last) {
+            local.num = randomint(local.music.size) + 1
+            println "[DEBUG] Sound local.num: " local.num
+        }
+       local.last = local.num
+       $player stufftext ("tmstop;tmstart " + local.music[local.num][0])
+       wait (local.music[local.num][1])
+    }
+end
+
+storm:
+    println "[DEBUG] Started storm"
+    while (1)
+    {
+       wait (30 + randomint(15))
+       local.num = (randomint (3) + 1)
+       switch (local.num)
+       {
+         case 1:
+         //println "[DEBUG] Storm 1"
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.2
+          $world farplane_color ( 0 0 0 )
+          wait 1
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.1
+          $world farplane_color ( 0 0 0 )
+          wait 0.1
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.1
+          $world farplane_color ( 0 0 0 )
+          wait (1 + randomfloat(2))
+          $world playsound thunder
+          break
+         case 2:
+         //println "[DEBUG] Storm 2"
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.1
+          $world farplane_color ( 0 0 0 )
+          wait 0.1
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.1
+          $world farplane_color ( 0 0 0 )
+          $world playsound thunder
+          wait 1
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.2
+          $world farplane_color ( 0 0 0 )
+          wait (1 + randomfloat(2))
+          break
+         case 3:
+         //println "[DEBUG] Storm 3"
+          $world farplane_color ( 0.9 0.9 0.9 )
+          $world playsound thunder
+          wait 0.1
+          $world farplane_color ( 0 0 0 )
+          wait 0.1
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.2
+          $world farplane_color ( 0 0 0 )
+          wait 0.5
+          $world farplane_color ( 0.9 0.9 0.9 )
+          wait 0.1
+          $world farplane_color ( 0 0 0 )
+          wait (1 + randomfloat(2))
+          break
+       }
+    }
+end
+
