@@ -6,7 +6,7 @@
 *.spv
 *.min
 *.bsp
-*.log
+qconsole.log
 
 sound/amb_stereo
 sound/dialogue

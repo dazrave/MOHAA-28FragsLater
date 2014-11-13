@@ -33,13 +33,17 @@ couldn't exec custom.cfg
 Initializing DirectInput...
 Couldn't set DI coop level
 Falling back to Win32 mouse support...
-------- Input Initialization Complete ------- 25
+------- Input Initialization Complete ------- 27
 You are now setup for medium mode.
 Winsock Initialized
 Opening IP socket: localhost:12203
 Hostname: SlimCherry
 IP: 192.168.0.11
+<<<<<<< HEAD
 --- Common Initialization Complete --- 781 ms
+=======
+--- Common Initialization Complete --- 745 ms
+>>>>>>> omg
 Working directory: C:\Program Files (x86)\EA Games\MOHAA Development
 Loading Localization File global/localization.txt
 execing server.cfg
@@ -100,7 +104,11 @@ TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_bipod_no
 *!*!*!* Objects are not allowed for use in the game. Make it a static model or a script model as needed.
 TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_gun.tik.
 ^~^~^ Classname turretweapon_german_mg42 used, but model was not a TIKI, using Object.
+<<<<<<< HEAD
 -------------------- Actual Spawning Entities Done ------------------ 16 ms
+=======
+-------------------- Actual Spawning Entities Done ------------------ 21 ms
+>>>>>>> omg
 TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_gun.tik.
 ^~^~^ Bad model name 'statweapons//mg42_gun.tik'
 TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_bipod_nonstatic.tik.
@@ -112,7 +120,11 @@ Adding autosave names
 39 entities spawned
 115 simple entities spawned
 0 entities inhibited
+<<<<<<< HEAD
 -------------------- Spawning Entities Done ------------------ 47 ms
+=======
+-------------------- Spawning Entities Done ------------------ 55 ms
+>>>>>>> omg
 *!*!*!* 'models/statweapons/mg42_bipod_nonstatic.tik' was spawned as an Object entity at (257 -171 286). Should be made into a static model or script model (#1).
 *!*!*!* 'models/statweapons/mg42_gun.tik' was spawned as an Object entity at (257 -173 284). Should be made into a static model or script model (#2).
 
@@ -120,7 +132,11 @@ Adding autosave names
 -----------PARSING UBERSOUND (SERVER)------------
 Any SetCurrentTiki errors means that tiki wasn't prefetched and tiki-specific sounds for it won't work. To fix prefetch the tiki. Ignore if you don't use that tiki on this level.
 CG_Command_ProcessFile: ubersound/ubersound.scr
+<<<<<<< HEAD
 Parse/Load time: 0.028000 seconds.
+=======
+Parse/Load time: 0.034000 seconds.
+>>>>>>> omg
 -------------UBERSOUND DONE (SERVER)---------------
 
 
@@ -128,6 +144,7 @@ Parse/Load time: 0.028000 seconds.
 -----------PARSING UBERDIALOG (SERVER)------------
 Any SetCurrentTiki errors means that tiki wasn't prefetched and tiki-specific sounds for it won't work. To fix prefetch the tiki. Ignore if you don't use that tiki on this level.
 CG_Command_ProcessFile: ubersound/uberdialog.scr
+<<<<<<< HEAD
 Parse/Load time: 0.123000 seconds.
 -------------UBERDIALOG DONE (SERVER)---------------
 
@@ -136,10 +153,17 @@ Parse/Load time: 0.123000 seconds.
 [DEBUG] Starting forcefastsky.
 [DEBUG] Started storm
 [DEBUG] Wait 10.
+=======
+Parse/Load time: 0.140000 seconds.
+-------------UBERDIALOG DONE (SERVER)---------------
+
+------ Server Initialization Complete ------  1.13 seconds
+>>>>>>> omg
 soundtrack switched to music/mohdm6.mus.
 playing music/mohdm6.mus
 music set to normal with fallback normal
 Loading Ambient.scr
+<<<<<<< HEAD
 Hitch warning: 1169 msec frame time
        $player stufftext "r_fastsky 1" (global/28fragslater.scr, 523)
        $player ^
@@ -157,6 +181,13 @@ SV packet 192.168.0.15:12203 : getchallenge
 SV packet 192.168.0.15:12203 : connect
 SVC_DirectConnect ()
 >>>\challenge\957106620\qport\34286\protocol\8\dm_playergermanmodel\german_panzer_tankcommander\rate\20000\dm_playermodel\american_ranger\name\Congo\snaps\20<<<
+=======
+Hitch warning: 1164 msec frame time
+SV packet 192.168.0.15:12203 : getchallenge
+SV packet 192.168.0.15:12203 : connect
+SVC_DirectConnect ()
+>>>\challenge\957095622\qport\34286\protocol\8\dm_playergermanmodel\german_panzer_tankcommander\rate\20000\dm_playermodel\american_ranger\name\Congo\snaps\20<<<
+>>>>>>> omg
 version 8 connecting to 8
 Client 0 connecting with 0 challenge ping
 Congo is preparing for deployment
@@ -167,7 +198,11 @@ Going from CS_CONNECTED to CS_PRIMED for Congo
 SV packet 80.1.32.235:12203 : getchallenge
 SV packet 80.1.32.235:12203 : connect
 SVC_DirectConnect ()
+<<<<<<< HEAD
 >>>\challenge\10045328\qport\48857\protocol\8\dm_playergermanmodel\german_elite_sentry\rate\20000\dm_playermodel\american_ranger\name\Stevo\snaps\20<<<
+=======
+>>>\challenge\10033388\qport\48857\protocol\8\dm_playergermanmodel\german_elite_sentry\rate\20000\dm_playermodel\american_ranger\name\Stevo\snaps\20<<<
+>>>>>>> omg
 version 8 connecting to 8
 Client 1 connecting with 0 challenge ping
 Stevo is preparing for deployment
@@ -177,10 +212,12 @@ SV_SendClientGameState() for Stevo
 Going from CS_CONNECTED to CS_PRIMED for Stevo
 Going from CS_PRIMED to CS_ACTIVE for Congo
 Congo has entered the battle
+Hitch warning: 2051 msec frame time
 Going from CS_PRIMED to CS_ACTIVE for Stevo
 Stevo has entered the battle
 ^~^~^ Add the following line to the *_precache.scr map script:
 cache models/items/binoculars.tik
+<<<<<<< HEAD
 ^~^~^ Add the following line to the *_precache.scr map script:
 cache models/player/german_[kapo]_prisioner_1.tik
 [DEBUG] Default Timelimit is: 300
@@ -220,3 +257,63 @@ LOCALIZATION ERROR: 'survivor!' does not have a localization entry
 broadcast: print "Server quit\n"
 ==== ShutdownGame ====
 ---------------------------
+=======
+------ Server Initialization ------
+Server: dm/mohdm6
+==== CleanupGame ====
+Adding script: 'dm/mohdm6_precache.scr'
+^~^~^ Can't find models/player/allied_oss.tik
+Tiki:LoadFile Couldn't load models/player/allied_oss.tik
+^~^~^ Can't find models/player/allied_oss_fps.tik
+Tiki:LoadFile Couldn't load models/player/allied_oss_fps.tik
+^~^~^ Can't find models/player/german_elite_gestapo.tik
+Tiki:LoadFile Couldn't load models/player/german_elite_gestapo.tik
+^~^~^ Can't find models/player/german_elite_gestapo_fps.tik
+Tiki:LoadFile Couldn't load models/player/german_elite_gestapo_fps.tik
+^~^~^ Can't find models/player/german_winter1.tik
+Tiki:LoadFile Couldn't load models/player/german_winter1.tik
+^~^~^ Can't find models/player/german_winter1_fps.tik
+Tiki:LoadFile Couldn't load models/player/german_winter1_fps.tik
+^~^~^ Can't find models/player/german_winter2.tik
+Tiki:LoadFile Couldn't load models/player/german_winter2.tik
+^~^~^ Can't find models/player/german_winter2_fps.tik
+Tiki:LoadFile Couldn't load models/player/german_winter2_fps.tik
+exec global/infection.scr (global/dmprecache.scr, 83)
+^
+
+^~^~^ Script Error: Can't find 'global/infection.scr'
+
+TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_gun.tik.
+TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_bipod_nonstatic.tik.
+-------------------- Spawning Entities -----------------------
+soundtrack switched to .
+-------------------- Actual Spawning Entities -----------------------
+TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_bipod_nonstatic.tik.
+^~^~^ Classname turretweapon_german_mg42bipod used, but model was not a TIKI, using Object.
+TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_gun.tik.
+^~^~^ Classname turretweapon_german_mg42 used, but model was not a TIKI, using Object.
+-------------------- Actual Spawning Entities Done ------------------ 14 ms
+TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_gun.tik.
+^~^~^ Bad model name 'statweapons//mg42_gun.tik'
+TIKI_LoadTIKIfile: No valid animations found in models/statweapons/mg42_bipod_nonstatic.tik.
+^~^~^ Bad model name 'statweapons//mg42_bipod_nonstatic.tik'
+0 teams with 0 entities
+Adding script: 'dm/mohdm6.scr'
+Adding autosave names
+39 entities spawned
+115 simple entities spawned
+0 entities inhibited
+-------------------- Spawning Entities Done ------------------ 40 ms
+*!*!*!* 'models/statweapons/mg42_bipod_nonstatic.tik' was spawned as an Object entity at (257 -171 286). Should be made into a static model or script model (#3).
+*!*!*!* 'models/statweapons/mg42_gun.tik' was spawned as an Object entity at (257 -173 284). Should be made into a static model or script model (#4).
+Going from CS_PRIMED to CS_ACTIVE for Congo
+Congo has entered the battle
+Going from CS_PRIMED to CS_ACTIVE for Stevo
+Stevo has entered the battle
+------ Server Initialization Complete ------  0.18 seconds
+soundtrack switched to music/mohdm6.mus.
+playing music/mohdm6.mus
+music set to normal with fallback normal
+Loading Ambient.scr
+Hitch warning: 3258 msec frame time
+>>>>>>> omg
