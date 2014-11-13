@@ -13,7 +13,7 @@ main:
     // 2 = Infection
     // 3 = Survival
 
-    if (int(getcvar(28FragsLater)) != 3) {
+    if (int(getcvar(28fragslater)) != 3) {
         end
     }
 

@@ -79,5 +79,5 @@ cache models/player/german_worker_fps.tik
 // End of Cached Items
 
 // Start the 28 Frags Later script!
-// exec global/28fragslater.scr
-exec global/infection.scr
+exec global/28fragslater.scr
+//exec global/infection.scr
