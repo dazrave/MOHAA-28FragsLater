@@ -1,7 +1,13 @@
-# First, ignore everything
-*
-# Now, whitelist anything that's a directory
-!*/
-# And all the file types you're interested in.
-!.gitignore
-!*.src
+*.pk3
+*.dll
+*.cfg
+*.csv
+*.shader
+
+sound/amb
+sound/amb_stereo
+sound/dialogue
+sound/mechanics
+sound/music
+sound/vehicle
+sound/weapons

@@ -1,0 +1,650 @@
+^~^~^ Can't find localized.cfg
+couldn't exec localized.cfg
+execing autoexec.cfg
+Unknown command "fov"
+^~^~^ Can't find custom.cfg
+couldn't exec custom.cfg
+...detecting CPU, found Intel Pentium III
+
+------- Input Initialization -------
+Initializing DirectInput...
+Couldn't set DI coop level
+Falling back to Win32 mouse support...
+------- Input Initialization Complete ------- 27
+You are now setup for medium mode.
+----- Client Initialization -----
+Called FadeSound with: 0.000000
+
+------------------
+Event system initialized: 69 classes 244 events 67344 total memory in response list
+
+----- Initializing Renderer ----
+----- R_Init -----
+Initializing OpenGL subsystem
+...initializing QGL
+...calling LoadLibrary( 'C:\Windows\system32\opengl32.dll' ): succeeded
+...setting mode 2: 512 384 W
+...registered window class
+...created window@1389,617 (518x412)
+Initializing OpenGL driver
+...getting DC: succeeded
+...GLW_ChoosePFD( 32, 24, 0 )
+...125 PFDs found
+...hardware acceleration found
+...PIXELFORMAT 7 selected
+...creating GL context: succeeded
+...making context current: succeeded
+Initializing OpenGL extensions
+...using GL_EXT_texture_compression_s3tc
+...using GL_ARB_texture_compression
+...GL_EXT_texture_env_add not found
+...using WGL_EXT_swap_control
+...using GL_ARB_multitexture
+...ignoring GL_EXT_texture_env_combine
+...using GL_EXT_compiled_vertex_array
+...WGL_3DFX_gamma_control not found
+
+GL_VENDOR: NVIDIA Corporation
+GL_RENDERER: GeForce 210/PCIe/SSE2
+GL_VERSION: 3.3.0
+GL_EXTENSIONS: GL_ARB_depth_texture
+GL_EXTENSIONS: GL_ARB_fragment_program
+GL_EXTENSIONS: GL_ARB_imaging
+GL_EXTENSIONS: GL_ARB_multisample
+GL_EXTENSIONS: GL_ARB_multitexture
+GL_EXTENSIONS: GL_ARB_point_parameters
+GL_EXTENSIONS: GL_ARB_shadow
+GL_EXTENSIONS: GL_ARB_texture_border_clamp
+GL_EXTENSIONS: GL_ARB_texture_compression
+GL_EXTENSIONS: GL_ARB_texture_cube_map
+GL_EXTENSIONS: GL_ARB_texture_env_add
+GL_EXTENSIONS: GL_ARB_texture_env_combine
+GL_EXTENSIONS: GL_ARB_texture_env_crossbar
+GL_EXTENSIONS: GL_ARB_texture_env_dot3
+GL_EXTENSIONS: GL_ARB_texture_mirrored_repeat
+GL_EXTENSIONS: GL_ARB_transpose_matrix
+GL_EXTENSIONS: GL_ARB_vertex_buffer_object
+GL_EXTENSIONS: GL_ARB_vertex_program
+GL_EXTENSIONS: GL_ARB_window_pos
+GL_EXTENSIONS: GL_S3_s3tc
+GL_EXTENSIONS: GL_EXT_abgr
+GL_EXTENSIONS: GL_EXT_bgra
+GL_EXTENSIONS: GL_EXT_blend_color
+GL_EXTENSIONS: GL_EXT_blend_func_separate
+GL_EXTENSIONS: GL_EXT_blend_minmax
+GL_EXTENSIONS: GL_EXT_blend_subtract
+GL_EXTENSIONS: GL_EXT_compiled_vertex_array
+GL_EXTENSIONS: GL_EXT_draw_range_elements
+GL_EXTENSIONS: GL_EXT_fog_coord
+GL_EXTENSIONS: GL_EXT_multi_draw_arrays
+GL_EXTENSIONS: GL_EXT_packed_pixels
+GL_EXTENSIONS: GL_EXT_point_parameters
+GL_EXTENSIONS: GL_EXT_rescale_normal
+GL_EXTENSIONS: GL_EXT_secondary_color
+GL_EXTENSIONS: GL_EXT_separate_specular_color
+GL_EXTENSIONS: GL_EXT_shadow_funcs
+GL_EXTENSIONS: GL_EXT_stencil_two_side
+GL_EXTENSIONS: GL_EXT_stencil_wrap
+GL_EXTENSIONS: GL_EXT_texture3D
+GL_EXTENSIONS: GL_EXT_texture_compression_s3tc
+GL_EXTENSIONS: GL_EXT_texture_cube_map
+GL_EXTENSIONS: GL_EXT_texture_edge_clamp
+GL_EXTENSIONS: GL_EXT_texture_env_combine
+GL_EXTENSIONS: GL_EXT_texture_env_dot3
+GL_EXTENSIONS: GL_EXT_texture_filter_anisotropic
+GL_EXTENSIONS: GL_EXT_texture_lod
+GL_EXTENSIONS: GL_EXT_texture_lod_bias
+GL_EXTENSIONS: GL_EXT_texture_object
+GL_EXTENSIONS: GL_EXT_vertex_array
+GL_EXTENSIONS: GL_IBM_rasterpos_clip
+GL_EXTENSIONS: GL_IBM_texture_mirrored_repeat
+GL_EXTENSIONS: GL_KTX_buffer_region
+GL_EXTENSIONS: GL_NV_blend_square
+GL_EXTENSIONS: GL_NV_copy_depth_to_color
+GL_EXTENSIONS: GL_NV_depth_clamp
+GL_EXTENSIONS: GL_NV_fence
+GL_EXTENSIONS: GL_NV_float_buffer
+GL_EXTENSIONS: GL_NV_fog_distance
+GL_EXTENSIONS: GL_NV_fragment_program
+GL_EXTENSIONS: GL_NV_half_float
+GL_EXTENSIONS: GL_NV_light_max_exponent
+GL_EXTENSIONS: GL_NV_multisample_filter_hint
+GL_EXTENSIONS: GL_NV_occlusion_query
+GL_EXTENSIONS: GL_NV_packed_depth_stencil
+GL_EXTENSIONS: GL_NV_pixel_data_range
+GL_EXTENSIONS: GL_NV_point_sprite
+GL_EXTENSIONS: GL_NV_primitive_restart
+GL_EXTENSIONS: GL_NV_register_combiners
+GL_EXTENSIONS: GL_NV_register_combiners2
+GL_EXTENSIONS: GL_NV_texgen_reflection
+GL_EXTENSIONS: GL_NV_texture_compression_vtc
+GL_EXTENSIONS: GL_NV_texture_env_combine4
+GL_EXTENSIONS: GL_NV_texture_expand_normal
+GL_EXTENSIONS: GL_NV_texture_rectangle
+GL_EXTENSIONS: GL_NV_texture_shader
+GL_EXTENSIONS: GL_NV_texture_shader2
+GL_EXTENSIONS: GL_NV_texture_shader3
+GL_EXTENSIONS: GL_NV_vertex_array_range
+GL_EXTENSIONS: GL_NV_vertex_array_range2
+GL_EXTENSIONS: GL_NV_vertex_program
+GL_EXTENSIONS: GL_NV_vertex_program1_1
+GL_EXTENSIONS: GL_NV_vertex_program2
+GL_EXTENSIONS: GL_SGIS_generate_mipmap
+GL_EXTENSIONS: GL_SGIS_texture_lod
+GL_EXTENSIONS: GL_SGIX_depth_texture
+GL_EXTENSIONS: GL_SGIX_shadow
+GL_EXTENSIONS: GL_WIN_swap_hint
+GL_EXTENSIONS: WGL_EXT_swap_control
+GL_MAX_TEXTURE_SIZE: 8192
+GL_MAX_ACTIVE_TEXTURES_ARB: 4
+
+PIXELFORMAT: color(32-bits) Z(24-bit) stencil(0-bits)
+MODE: 2, 512 x 384 windowed hz:60
+GAMMA: hardware w/ 0 overbright bits
+CPU: Intel Pentium III
+rendering primitives: single glDrawElements
+texturemode: GL_LINEAR_MIPMAP_NEAREST
+picmip: 0
+texture bits: 32
+multitexture: enabled
+compiled vertex arrays: enabled
+texenv add: disabled
+compressed textures: enabled
+performing W2K gamma clamp.
+Initializing Shaders
+Setting up Shaders
+----- finished R_Init -----
+------- profiling DrawBackground methods -------
+glDrawPixels w/ BGR: 37503 clocks
+glDrawPixels w/ RGB: 26872 clocks
+glTexSubImage2D w/ BGR: 1058632 clocks
+glTexSubImage2D w/ RGB: 1538550 clocks
+DrawBackground: using glDrawPixels with RGB data
+-------------------------------
+------ Force Feedback Initialization -----
+Loading ff...
+ff: Creating feedback device:
+ff: ...no ff mouse found
+Failed to load ff dll
+------------------------------------------
+--------- Force Feedback Shutdown --------
+------------------------------------------
+Winsock Initialized
+Opening IP socket: localhost:12203
+Hostname: SlimCherry
+IP: 192.168.0.23
+IP: 192.168.0.11
+------- Sound Initialization (full) -------
+Sound opened using Direct Sound
+--- Available sound providers ---
+'Miles Fast 2D Positional Audio'
+ 
+'Miles Fast 2D Positional Audio' provider opened.
+Loading global/sound0.txt
+------- S_StopAllSounds (stop music) -------
+MUSIC: changing from [  |  ] to [ none | none ]
+------- S_StopAllSounds Complete-------
+----- Sound Info -----
+driver - Miles Fast 2D Positional Audio
+speaker setup - 2 speakers
+reverb - OFF
+samplebits - 16
+speed - 44100
+----------------------
+------- Sound Initialization Complete ------- 167 ms
+Setting up Shaders
+Loading inventory...
+----- Client Initialization Complete ----- 1034 ms
+--- Common Initialization Complete --- 1750 ms
+Working directory: C:\Users\Darren\Dropbox\Documents\Games\MOHAA
+------- S_StopAllSounds (stop music) -------
+------- S_StopAllSounds Complete-------
+Could not start triggered music 'sound/music/mus_MainTheme.mp3'
+performing W2K gamma clamp.
+LOCALIZATION ERROR: 'MOHAA Console' does not have a localization entry
+LOCALIZATION ERROR: 'dm/mohdm1' does not have a localization entry
+LOCALIZATION ERROR: 'Select a Map' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm1' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm2' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm3' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm4' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm5' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm6' does not have a localization entry
+LOCALIZATION ERROR: 'mohdm7' does not have a localization entry
+LOCALIZATION ERROR: 'TraffordCentre' does not have a localization entry
+LOCALIZATION ERROR: 'dm/mohdm6' does not have a localization entry
+g_gametypestring will be changed upon restarting.
+cheats will be changed upon restarting.
+------ Server Initialization ------
+Server: dm/mohdm6
+Called FadeSound with: 0.000000
+Called FadeSound with: 0.000000
+------- S_StopAllSounds (stop music) -------
+------- S_StopAllSounds Complete-------
+------- S_StopAllSounds (stop music) -------
+------- S_StopAllSounds Complete-------
+Called FadeSound with: 0.000000
+Setting up Shaders
+UI_DrawConnect called
+^~^~^ Can't find textures/sprites/white.tga
+WARNING: R_FindImageFile could not find 'textures/sprites/white.tga' in shader 'white'
+LOCALIZATION ERROR: 'Stalingrad' does not have a localization entry
+LoadLibrary (main/gamex86.dll)
+==== InitGame ====
+sizeof(Actor) == 2960
+Magic sizeof actor numer: 2896
+
+------------------
+Event system initialized: 154 classes 1303 events 802648 total memory in response list
+
+==== CleanupGame ====
+CM_LoadMap( maps/dm/mohdm6.bsp, 0 )
+^~^~^ Can't find textures/general_structure/jh_conc2.tga
+^~^~^ Can't find textures/interior/hotelwthr_trim.tga
+^~^~^ Can't find textures/general_industrial/deckgrate_set1b.tga
+^~^~^ Can't find textures/interior/whitewoodbm.tga
+Adding script: 'dm/mohdm6_precache.scr'
+^~^~^ Box data is corrupted for 'models/human/allied_pilot/allied_pilot.skd'
+^~^~^ Morph targets data is corrupted for 'models/human/allied_pilot/allied_pilot.skd'
+Channel named Bip01 L Clavicle pos not added. (Bone will not work without it)
+Channel named Bip01 R Clavicle pos not added. (Bone will not work without it)
+TIKI_InitTiki: could not find surface 'panzerschreck2' in 'models/weapons/panzerschreck.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'origin' in 'models/projectiles/steilhandgranate_primary.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'tag_barrel' in 'models/projectiles/steilhandgranate_primary.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'origin' in 'models/projectiles/steilhandgranate.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'tag_barrel' in 'models/projectiles/steilhandgranate.tik' (check referenced skb/skd files).
+WARNING- DOWNGRADING TO OLD ANIMATION FORMAT FOR FILE: models/equipment/usgear/helmets/us_helmet.skc
+WARNING- DOWNGRADING TO OLD ANIMATION FORMAT FOR FILE: models/vehicles/ktigertank_d/ktigertank_all_d.skc
+TIKI_InitTiki: could not find surface 'tank4' in 'models/vehicles/kingtank_all_d.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'opel5' in 'models/vehicles/opeltruck_d.tik' (check referenced skb/skd files).
+WARNING- DOWNGRADING TO OLD ANIMATION FORMAT FOR FILE: models/vehicles/shermantank/sherman_damage.skc
+TIKI_InitTiki: could not find surface 'ropes' in 'models/vehicles/kingtank.tik' (check referenced skb/skd files).
+^~^~^ Event 'dmturnspeed' does not exist.
+TIKI_InitTiki: could not find surface 'jeep2' in 'models/vehicles/jeep.tik' (check referenced skb/skd files).
+TIKI_ParseInit: unknown init command classname in models/animate/fire.tik on line 14, skipping line.
+TIKI_ParseInit: unknown init command notsolid in models/animate/fire.tik on line 15, skipping line.
+exec 28fragslater/28fragslater.scr (global/dmprecache.scr, 94)
+^
+
+^~^~^ Script Error: Can't find '28fragslater/28fragslater.scr'
+
+-------------------- Spawning Entities -----------------------
+soundtrack switched to .
+-------------------- Actual Spawning Entities -----------------------
+-------------------- Actual Spawning Entities Done ------------------ 3 ms
+0 teams with 0 entities
+Adding script: 'dm/mohdm6.scr'
+Adding autosave names
+39 entities spawned
+115 simple entities spawned
+0 entities inhibited
+-------------------- Spawning Entities Done ------------------ 8 ms
+------ Server Initialization Complete ------  2.55 seconds
+soundtrack switched to music/mohdm6.mus.
+playing music/mohdm6.mus
+music set to normal with fallback normal
+Loading Ambient.scr
+writing to: C:\Users\Darren\Dropbox\Documents\Games\MOHAA\main\configs\unnamedsoldier.cfg
+SV packet loopback : connect
+SVC_DirectConnect ()
+>>>\challenge\0\qport\9909\protocol\8\dm_playergermanmodel\axis_civilian\name\UnnamedSoldier\rate\5000\snaps\20\dm_playermodel\american_army<<<
+version 8 connecting to 8
+Going from CS_FREE to CS_CONNECTED for UnnamedSoldier
+CL packet loopback: connectResponse
+UnnamedSoldier : dropped gamestate, resending
+SV_SendClientGameState() for UnnamedSoldier
+Going from CS_CONNECTED to CS_PRIMED for UnnamedSoldier
+Called FadeSound with: 0.000000
+------- Sound Begin Registration -------
+------- S_StopAllSounds (stop music) -------
+------- S_StopAllSounds Complete-------
+------- Sound Begin Registration Complete -------
+LoadLibrary (main/cgamex86.dll)
+
+------------------
+Event system initialized: 6 classes 138 events 3312 total memory in response list
+
+CM_LoadMap( maps/dm/mohdm6.bsp, 1 )
+
+
+-----------PARSING UBERSOUND------------
+Any SetCurrentTiki errors means that tiki wasn't prefetched and tiki-specific sounds for it won't work. To fix prefetch the tiki. Ignore if you don't use that tiki on this level.
+CG_Command_ProcessFile: ubersound/ubersound.scr
+Couldn't load sound: sound/null.wav
+Parse/Load time: 2.580000 seconds.
+-------------UBERSOUND DONE---------------
+
+
+
+-----------PARSING UBERDIALOG------------
+Any SetCurrentTiki errors means that tiki wasn't prefetched and tiki-specific sounds for it won't work. To fix prefetch the tiki. Ignore if you don't use that tiki on this level.
+CG_Command_ProcessFile: ubersound/uberdialog.scr
+Parse/Load time: 0.208000 seconds.
+-------------UBERDIALOG DONE---------------
+
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has opaque maps defined after stage 0!!!
+WARNING: shader 'textures/general_structure/frenchfloor_wood1' has depthmask enabled after stage 0!!!
+stitched 0 LoD cracks
+...loaded 5390 faces, 68 meshes, 0 trisurfs, 0 flares
+Using ter_maxtris = 24576
+Terrain: 1.88 MB tris, 1.31 MB verts, 0.00 MB in 6 patches, 3.19 MB total
+TIKI_InitTiki: could not find surface 'sb_4' in 'models/static/sandbag_small_semicircle.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'bunkerchair2' in 'models/furniture/bunkerchair.tik' (check referenced skb/skd files).
+R_LevelMarksLoad: maps/dm/mohdm6.dcl not found
+^~^~^ Can't find textures/menu/exit.tga
+Couldn't find image for shader textures/menu/exit
+SOUNDTRACK: Loading music/mohdm6.mus
+MUSIC: changing from [ none | none ] to [ normal | normal ]
+WARNING: reused image textures/effects/fire_ring.tga with mixed glWrapClampMode parm
+^~^~^ Can't find vehicles/tigercannon.tik
+Tiki:LoadFile Couldn't load vehicles/tigercannon.tik
+RE_RegisterModel: Registration failed for 'vehicles/tigercannon.tik'
+^~^~^ Can't find vehicles/panzer_cannon_europe.tik
+Tiki:LoadFile Couldn't load vehicles/panzer_cannon_europe.tik
+RE_RegisterModel: Registration failed for 'vehicles/panzer_cannon_europe.tik'
+^~^~^ Can't find vehicles/panzer_smgun_europe.tik
+Tiki:LoadFile Couldn't load vehicles/panzer_smgun_europe.tik
+RE_RegisterModel: Registration failed for 'vehicles/panzer_smgun_europe.tik'
+^~^~^ Can't find vehicles/kingcannon.tik
+Tiki:LoadFile Couldn't load vehicles/kingcannon.tik
+RE_RegisterModel: Registration failed for 'vehicles/kingcannon.tik'
+^~^~^ Can't find vehicles/kingsmgun.tik
+Tiki:LoadFile Couldn't load vehicles/kingsmgun.tik
+RE_RegisterModel: Registration failed for 'vehicles/kingsmgun.tik'
+Loading Special Effects...
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_paper_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_paper_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_wood_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_wood_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_metal_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_metal_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_stone_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_stone_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_dirt_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_dirt_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_grass_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_grass_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_mud_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_mud_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_water_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_water_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_glass_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_glass_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_sand_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_sand_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_foliage_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_foliage_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_snow_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_snow_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_carpet_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_carpet_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_human_uniform_lite.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bh_human_uniform_hard.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/water_trail_bubble.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_base.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/bazookaexp_base.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_paper.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_wood.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_metal.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_stone.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_dirt.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_grass.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_mud.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_water.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_gravel.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_sand.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_foliage.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_snow.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/grenexp_carpet.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/water_ripple_still.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/water_ripple_moving.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_oil_leak_big.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_oil_leak_medium.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_oil_leak_small.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_oil_leak_splat.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_water_leak_big.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_water_leak_medium.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_water_leak_small.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/barrel_water_leak_splat.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_light_dust.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_heavy_dust.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_dirt.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_grass.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_mud.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_puddle.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_sand.tik
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/fx/fs_snow.tik
+------- Sound End Registration -------
+------- Sound End Registration Complete -------
+CL_EndRegistration:  0.00 seconds
+CL_InitCGame: 10.76 seconds
+Going from CS_PRIMED to CS_ACTIVE for UnnamedSoldier
+Called FadeSound with: 0.000000
+CL_GetSnapshot: Not all children could find their parents.
+CL_GetSnapshot: entity 0 with parent 0 and model '' at 0.00 0.00 0.00, could not find parent.
+UnnamedSoldier has entered the battle
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/player/american_army_fps.tik
+LOCALIZATION ERROR: 'Time Left:' does not have a localization entry
+LOCALIZATION ERROR: 'Press Use(e) to follow a player.' does not have a localization entry
+LOCALIZATION ERROR: 'Health' does not have a localization entry
+LOCALIZATION ERROR: 'Score:' does not have a localization entry
+LOCALIZATION ERROR: 'Time Left:  0:00' does not have a localization entry
+Could not start music file 'sound/amb_stereo/Amb_M4_Basement_01.mp3'!LOCALIZATION ERROR: 'Press fire to join the battle!' does not have a localization entry
+LOCALIZATION ERROR: '
+
+
+Press fire to join the battle!' does not have a localization entry
+^~^~^ Add the following line to the *_precache.scr map script:
+cache models/player/axis_civilian.tik
+LOCALIZATION ERROR: 'american_army' does not have a localization entry
+LOCALIZATION ERROR: 'axis_civilian' does not have a localization entry
+LOCALIZATION ERROR: 'ISDN' does not have a localization entry
+^~^~^ Can't find textures/mohmenu/changemap_sign.tga
+WARNING: R_FindImageFile could not find 'textures/mohmenu/changemap_sign.tga' in shader 'changemap_sign'
+dedicated will be changed upon restarting.
+----- CL_Shutdown -----
+Called FadeSound with: 0.000000
+------- S_StopAllSounds (stop music) -------
+MUSIC: changing from [ normal | normal ] to [ none | none ]
+------- S_StopAllSounds Complete-------
+------- Sound Shutdown (full) -------
+------- Sound Shutdown Complete -------
+RE_Shutdown( 1 )
+Shutting down OpenGL subsystem
+...wglMakeCurrent( NULL, NULL ): success
+...deleting GL context: success
+...releasing DC: success
+...hiding window
+...destroying window
+...window successfully destroyed
+...shutting down QGL
+...unloading OpenGL DLL
+-----------------------
+Winsock Initialized
+Opening IP socket: 192.168.0.23:12203
+Hostname: SlimCherry
+IP: 192.168.0.23
+IP: 192.168.0.11
+broadcast: print "UnnamedSoldier disconnected\n"
+Going to CS_ZOMBIE for UnnamedSoldier
+------ Server Initialization ------
+Server: dm/mohdm6
+==== ShutdownGame ====
+LoadLibrary (main/gamex86.dll)
+==== InitGame ====
+sizeof(Actor) == 2960
+Magic sizeof actor numer: 2896
+
+------------------
+Event system initialized: 154 classes 1303 events 802648 total memory in response list
+
+==== CleanupGame ====
+CM_LoadMap( maps/dm/mohdm6.bsp, 0 )
+^~^~^ Can't find textures/general_structure/jh_conc2.tga
+^~^~^ Can't find textures/interior/hotelwthr_trim.tga
+^~^~^ Can't find textures/general_industrial/deckgrate_set1b.tga
+^~^~^ Can't find textures/interior/whitewoodbm.tga
+Adding script: 'dm/mohdm6_precache.scr'
+^~^~^ Box data is corrupted for 'models/human/allied_pilot/allied_pilot.skd'
+^~^~^ Morph targets data is corrupted for 'models/human/allied_pilot/allied_pilot.skd'
+Channel named Bip01 L Clavicle pos not added. (Bone will not work without it)
+Channel named Bip01 R Clavicle pos not added. (Bone will not work without it)
+TIKI_InitTiki: could not find surface 'panzerschreck2' in 'models/weapons/panzerschreck.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'origin' in 'models/projectiles/steilhandgranate_primary.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'tag_barrel' in 'models/projectiles/steilhandgranate_primary.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'origin' in 'models/projectiles/steilhandgranate.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'tag_barrel' in 'models/projectiles/steilhandgranate.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'tank4' in 'models/vehicles/kingtank_all_d.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'opel5' in 'models/vehicles/opeltruck_d.tik' (check referenced skb/skd files).
+TIKI_InitTiki: could not find surface 'ropes' in 'models/vehicles/kingtank.tik' (check referenced skb/skd files).
+^~^~^ Event 'dmturnspeed' does not exist.
+TIKI_InitTiki: could not find surface 'jeep2' in 'models/vehicles/jeep.tik' (check referenced skb/skd files).
+TIKI_ParseInit: unknown init command classname in models/animate/fire.tik on line 14, skipping line.
+TIKI_ParseInit: unknown init command notsolid in models/animate/fire.tik on line 15, skipping line.
+exec 28fragslater/28fragslater.scr (global/dmprecache.scr, 94)
+^
+
+^~^~^ Script Error: Can't find '28fragslater/28fragslater.scr'
+
+-------------------- Spawning Entities -----------------------
+soundtrack switched to .
+-------------------- Actual Spawning Entities -----------------------
+-------------------- Actual Spawning Entities Done ------------------ 3 ms
+0 teams with 0 entities
+Adding script: 'dm/mohdm6.scr'
+Adding autosave names
+39 entities spawned
+115 simple entities spawned
+0 entities inhibited
+-------------------- Spawning Entities Done ------------------ 24 ms
+
+
+-----------PARSING UBERSOUND (SERVER)------------
+Any SetCurrentTiki errors means that tiki wasn't prefetched and tiki-specific sounds for it won't work. To fix prefetch the tiki. Ignore if you don't use that tiki on this level.
+CG_Command_ProcessFile: ubersound/ubersound.scr
+Parse/Load time: 0.035000 seconds.
+-------------UBERSOUND DONE (SERVER)---------------
+
+
+
+-----------PARSING UBERDIALOG (SERVER)------------
+Any SetCurrentTiki errors means that tiki wasn't prefetched and tiki-specific sounds for it won't work. To fix prefetch the tiki. Ignore if you don't use that tiki on this level.
+CG_Command_ProcessFile: ubersound/uberdialog.scr
+Parse/Load time: 0.146000 seconds.
+-------------UBERDIALOG DONE (SERVER)---------------
+
+------ Server Initialization Complete ------  0.85 seconds
+soundtrack switched to music/mohdm6.mus.
+playing music/mohdm6.mus
+music set to normal with fallback normal
+Loading Ambient.scr
+Hitch warning: 868 msec frame time
+Going from CS_ZOMBIE to CS_FREE for 
+Hitch warning: 788 msec frame time
+net_port will be changed upon restarting.
+------ Server Initialization ------
+Server: dm/mohdm6
+==== CleanupGame ====
+Adding script: 'dm/mohdm6_precache.scr'
+^~^~^ Event 'dmturnspeed' does not exist.
+exec 28fragslater/28fragslater.scr (global/dmprecache.scr, 94)
+^
+
+^~^~^ Script Error: Can't find '28fragslater/28fragslater.scr'
+
+-------------------- Spawning Entities -----------------------
+soundtrack switched to .
+-------------------- Actual Spawning Entities -----------------------
+-------------------- Actual Spawning Entities Done ------------------ 3 ms
+0 teams with 0 entities
+Adding script: 'dm/mohdm6.scr'
+Adding autosave names
+39 entities spawned
+115 simple entities spawned
+0 entities inhibited
+-------------------- Spawning Entities Done ------------------ 7 ms
+------ Server Initialization Complete ------  0.10 seconds
+soundtrack switched to music/mohdm6.mus.
+playing music/mohdm6.mus
+music set to normal with fallback normal
+Loading Ambient.scr
+Hitch warning: 1092 msec frame time
+----- Server Shutdown -----
+broadcast: print "Server quit\n"
+==== ShutdownGame ====
+---------------------------
