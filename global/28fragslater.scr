@@ -7,7 +7,17 @@
 
 main:
 
-    println "[DEBUG] Starting Script."
+    // 28 Frags Later Gametypes
+    // 0 = Off
+    // 1 = Outbreak
+    // 2 = Infection
+    // 3 = Survival
+
+    if (int(getcvar(28FragsLater)) != 3) {
+        end
+    }
+
+    println "[DEBUG] Survival Mode."
 
 // Make sure the script is NOT already running
     if (level.isRunning) {
@@ -24,19 +34,8 @@ main:
        end
     }
 
-// Make sure there are enough players
-    /* THIS IS NOT WORKING FOR SOME REASON
-    if ($player.size < 2) // this is triggered on number of players in server, including spectate. Needs reworking.
-    {
-       println "[DEBUG] Not enough players. Terminating."
-       end
-    }
-    */
-
-// Make sure 28 Frags Later is switched on?????????
-
 // Script Version
-    level.scriptVersion = "0.6" // Version of script running
+    level.scriptVersion = "0.7.3" // Version of script running
     println "[DEBUG] Script Version: " level.scriptVersion
 
 // Survivor timelimit
@@ -66,14 +65,12 @@ main:
     thread storm
 
 // Set in game TAB information
-    setcvar "g_obj_alliedtext1" "28 Frags Later"
-    setcvar "g_obj_alliedtext2" "v0.6" // level.scriptVersion // Does this work? #################
+    setcvar "g_obj_alliedtext1" "[28 Frags Later]"
+    setcvar "g_obj_alliedtext2" "Survival"
     setcvar "g_obj_alliedtext3" ""
     setcvar "g_obj_axistext1" ""
-
-// Find out which chapter is running?
     setcvar "g_obj_axistext2" ""
-    setcvar "g_obj_axistext3" ""
+    setcvar "g_obj_axistext3" "www.28fragslater.co.uk"
 
 // Set level game state?
     level.inGame = 0
