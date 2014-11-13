@@ -693,3 +693,9 @@ Loading Ambient.scr
 [DEBUG] Selecting Survivor Again.
 [DEBUG] Setting up the Survivor.
 LOCALIZATION ERROR: 'You are the last Survivor!' does not have a localization entry
+[DEBUG] Time limit has been reached: NIL
+[DEBUG] End of game.
+[DEBUG] Clearing survivor settings.
+[DEBUG] Sending Survivor to axis
+[DEBUG] Selecting Survivor Again.
+[DEBUG] Setting up the Survivor.

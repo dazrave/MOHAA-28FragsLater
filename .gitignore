@@ -6,6 +6,7 @@
 *.min
 *.bsp
 *.spv
+*.log
 
 sound/amb_stereo
 sound/dialogue
