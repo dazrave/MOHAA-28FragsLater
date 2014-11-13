@@ -40,8 +40,8 @@ main:
     println "[DEBUG] Script Version: " level.scriptVersion
 
 // Survivor timelimit
-    level.survivorTimelimit = 200 // in seconds
-    println "[DEBUG] Timelimit in seconds: " level.survivorTimelimit
+    level.survivorTimelimitDefault = 300 // 5 minutes in seconds
+    println "[DEBUG] Timelimit in seconds: " level.survivorTimelimitDefault
 
 // Set the new gametype name
     setcvar "g_gametypestring" "28 Frags Later"
@@ -228,6 +228,18 @@ selectSurvivor:
             end
         }
 
+    // Dynamicaly set the time limit the survivor has to last for
+    if (local.inGame > 1) {
+        level.survivorTimelimitDeduction = (level.survivorTimelimitDefault / 100) * 10 // Get 10% of time limit
+        level.survivorTimelimit = local.inGame - 1 // Get number of Axis
+        level.survivorTimelimit = level.survivorTimelimit * level.survivorTimelimitDeduction // 10% times number of axis
+        level.survivorTimelimit = level.survivorTimelimitDefault - level.survivorTimelimit // Remove % of time from default ammount
+    } else {
+        level.survivorTimelimit = level.survivorTimelimitDefault // if there is only one axis, full time limit applies
+    }
+    println "[DEBUG] Default Timelimit is: " level.survivorTimelimitDefault
+    println "[DEBUG] Adjusting Timelimit to: " level.survivorTimelimit
+
     // don't run this thread again
     level.selectingSurvivor = 1
 
@@ -388,12 +400,12 @@ selectSurvivorAgain:
                 // Infected Proximity triggers to help them search for a camping survivor!
                 if (vector_length ($player[local.i].origin - local.survivor.origin) <= 500 && level.proximityTrigger == 0) {
                     $player[local.i] stufftext "sayteam I'm close to the survivor!"
-                    local.survivor stufftext "sayteam I hear them, they are getting closer!"
+                    local.survivor stufftext "say Huh? What was that noise!"
                     level.proximityTrigger = 1
+                    wait 30
                 }
 
                 while (vector_length ($player[local.i].origin - local.survivor.origin) > 500 && level.proximityTrigger == 1) {
-                    wait 20
                     // println "[DEBUG] Proximity Trigger OFF"
                     level.proximityTrigger = 0
                 }
@@ -417,6 +429,11 @@ selectSurvivorAgain:
         // ELSE tell everyone the survivor has died
         if (local.timeLimitHit){
             iprintlnbold_noloc "Time limit reached!"
+            println "[DEBUG] Game has been won by: " local.survivor
+            fadeout 10 0 0 0 1
+            waitframe
+            thread gameWon
+            end
         }
         else {
             iprintlnbold_noloc "The Survivor has been infected!"
@@ -456,6 +473,12 @@ selectSurvivorAgain:
 
 end
 // end of "survivor select again" thread
+
+gameWon:
+    // pause entire game
+    // display winners name
+    // load next map
+end
 
 
 updateTimes:
