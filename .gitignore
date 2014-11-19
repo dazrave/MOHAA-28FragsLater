@@ -3,6 +3,10 @@
 *.cfg
 *.csv
 *.shader
+*.spv
+*.min
+*.bsp
+*.log
 
 sound/amb_stereo
 sound/dialogue
