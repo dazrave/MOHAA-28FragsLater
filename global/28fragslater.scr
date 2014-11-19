@@ -40,7 +40,7 @@ main:
     println "[DEBUG] Script Version: " level.scriptVersion
 
 // Survivor timelimit
-    level.survivorTimelimitDefault = 300 // 5 minutes in seconds
+    level.survivorTimelimitDefault = 30 // 5 minutes in seconds
     println "[DEBUG] Timelimit in seconds: " level.survivorTimelimitDefault
 
 // Set the new gametype name
@@ -429,11 +429,13 @@ selectSurvivorAgain:
         // ELSE tell everyone the survivor has died
         if (local.timeLimitHit){
             iprintlnbold_noloc "Time limit reached!"
-            println "[DEBUG] Game has been won by: " local.survivor
+            waitframe
+            /*
+            println "[DEBUG] Launching map."
             fadeout 10 0 0 0 1
             waitframe
-            thread gameWon
             end
+            */
         }
         else {
             iprintlnbold_noloc "The Survivor has been infected!"
@@ -473,13 +475,6 @@ selectSurvivorAgain:
 
 end
 // end of "survivor select again" thread
-
-gameWon:
-    // pause entire game
-    // display winners name
-    // load next map
-end
-
 
 updateTimes:
     local.str = "" // set a blank string to use
@@ -620,4 +615,3 @@ storm:
        }
     }
 end
-
