@@ -56,11 +56,13 @@ main:
 
 // Set in game TAB information
     setcvar "g_obj_alliedtext1" "[28 Frags Later]"
-    setcvar "g_obj_alliedtext2" "infected"
+    setcvar "g_obj_alliedtext2" "Infection"
     setcvar "g_obj_alliedtext3" ""
     setcvar "g_obj_axistext1" ""
     setcvar "g_obj_axistext2" ""
     setcvar "g_obj_axistext3" "www.28fragslater.co.uk"
+
+    set sv_team_spawn_interval 1
 
 // Set level game state?
     level.inGame = 0
@@ -74,6 +76,7 @@ main:
     println "[DEBUG] Starting continous loop..."
     while (1) {
         local.inGame = 0 // Number of players in game is now ZERO
+        local.infected = 0 // Number of infected players is now ZERO
 
         // Loop around each player
         for (local.i = 1; local.i <= $player.size; local.i++) {
@@ -147,7 +150,7 @@ playerThinker: // needs renaming ????????????
     local.trg.player = self
 
     // triggers the thread that spawns the player?
-    local.trg setthread global/28fragslater.scr::spawnPlayer
+    local.trg setthread global/28FL-Infection.scr::spawnPlayer
     // Waits until player dies?
     while (self && local.trg) {
        waitframe
@@ -174,19 +177,26 @@ spawnPlayer:
         //println "[DEBUG] Spawning Player and setting skin."
 
         local.player.inGame = 1 // Set player as In Game
-        $player[local.i].infected = 0 // Set player as not infected
+
+        if (local.player.infected == 1) {
+            println "[DEBUG] Infecting Player."
+            local.player join_team axis
+            waitframe local.player respawn // Spawn the player
+            waitframe
+            local.player takeall // Take all weapons away from player
+            local.player item "models/weapons/colt45.tik" // Give player customised pistol NEEDS MAJOR REWORK (e.g don't use default pistol?)
+            local.player useweaponclass pistol // Pull pistol into focus
+            $player weaponcommand notdroppable // Prevent pistol from being dropped
+            local.infected++
+        } else {
+            // println "[DEBUG] Spawning Player."
+            local.player join_team allies
+            waitframe local.player respawn // Spawn the player
+            local.player takeall // Take all weapons away from player
+            local.player.infected = 1
+        }
+
         waitframe
-
-        local.player join_team allies
-
-        local.player respawn // Spawn the player
-
-        waitframe
-        //println "[DEBUG] Setting Player weapons."
-        local.player takeall // Take all weapons away from player
-        local.player item "models/weapons/colt45.tik" // Give player customised pistol NEEDS MAJOR REWORK (e.g don't use default pistol?)
-        local.player useweaponclass pistol // Pull pistol into focus
-        $player weaponcommand notdroppable // Prevent pistol from being dropped
 
     }
 end
@@ -224,7 +234,7 @@ selectinfected:
         }
 
         if (local.inGame < 2) { // no point in playing this on your own
-            println "[DEBUG] Not enough players. Terminating"
+            // println "[DEBUG] Not enough players. Terminating"
             fadein 0 0 0 0 1
             end
         }
@@ -235,7 +245,7 @@ selectinfected:
     local.lastinfected = level.infected
 
 selectinfectedAgain:
-    println "[DEBUG] Selecting infected Again."
+    println "[DEBUG] Selecting infected."
     local.infected = local.lastinfected
 
     local.inGame = 0 // remove from game?
@@ -266,7 +276,7 @@ selectinfectedAgain:
 
         while ((local.infected == local.lastinfected || local.infected.dmteam == spectator) && $player.size > 1) {
             local.infected = $player[randomint($player.size) + 1]
-            $player[local.i].infected = 1 // SET the initial infected player to be infected all the time for this round.
+            local.infected.infected = 1 // SET the initial infected player to be infected all the time for this round.
             waitframe
         }
 
@@ -317,6 +327,7 @@ selectinfectedAgain:
         local.infected.infectedExpiry = level.time + level.infectedTimelimit // current level time + timelimit that's set?
 
         // THIS NEEDS NEW COMMANDS TO DETECT WHEN EVERYONE HAS BEEN INFECTED ?????????????????????????????????????
+
        while (isAlive(local.infected) && level.infected == local.infected && local.infected.dmteam == axis) {
             for (local.i = 1; local.i <= $player.size; local.i++) {
                 // If local player is not in game (dead?)
@@ -388,7 +399,7 @@ end
 // end of "infected select again" thread
 
 sendToAxis:
-    println "[DEBUG] Switching a player to correct team."
+    println "[DEBUG] Switching player to correct team."
     self spectator
     waitframe
     println "[DEBUG] Wait 5."
