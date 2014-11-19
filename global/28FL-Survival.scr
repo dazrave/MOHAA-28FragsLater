@@ -7,17 +7,11 @@
 
 main:
 
-    // 28 Frags Later Gametypes
-    // 0 = Off
-    // 1 = Outbreak
-    // 2 = Infection
-    // 3 = Survival
-
     if (int(getcvar(28FragsLater)) != 3) {
         end
     }
 
-    println "[DEBUG] Survival Mode."
+    println "[DEBUG] Starting Gametype: Survival"
 
 // Make sure the script is NOT already running
     if (level.isRunning) {
@@ -33,10 +27,6 @@ main:
        println "[DEBUG] Improper gametype. Terminating."
        end
     }
-
-// Script Version
-    level.scriptVersion = "0.7.3" // Version of script running
-    println "[DEBUG] Script Version: " level.scriptVersion
 
 // Survivor timelimit
     level.survivorTimelimit = 200 // in seconds

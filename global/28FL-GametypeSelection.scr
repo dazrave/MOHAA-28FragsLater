@@ -7,6 +7,10 @@
 
 main:
 
+    // Script Version
+    level.scriptVersion = "0.7.3" // Version of script running
+    println "[DEBUG] Script Version: " level.scriptVersion
+
     // 28 Frags Later Gametypes
     // 0 = Off
     // 1 = Outbreak
@@ -22,7 +26,8 @@ main:
     waitframe
 
     if (int(getcvar(28FragsLater)) == 1) {
-        exec global/28FL-Outbreak.scr
+        println "[DEBUG] This gametype does not exist yet. Terminating."
+        // exec global/28FL-Outbreak.scr
         end
     }
     if (int(getcvar(28FragsLater)) == 2) {

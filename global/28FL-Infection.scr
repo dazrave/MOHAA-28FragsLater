@@ -7,17 +7,11 @@
 
 main:
 
-    // 28 Frags Later Gametypes
-    // 0 = Off
-    // 1 = Outbreak
-    // 2 = Infection
-    // 3 = Survival
-
-    if (int(getcvar(28FragsLater)) != 3) {
+    if (int(getcvar(28FragsLater)) != 2) {
         end
     }
 
-    println "[DEBUG] Survival Mode."
+    println "[DEBUG] Starting Gametype: infected"
 
 // Make sure the script is NOT already running
     if (level.isRunning) {
@@ -34,13 +28,9 @@ main:
        end
     }
 
-// Script Version
-    level.scriptVersion = "0.7.3" // Version of script running
-    println "[DEBUG] Script Version: " level.scriptVersion
-
-// Survivor timelimit
-    level.survivorTimelimit = 200 // in seconds
-    println "[DEBUG] Timelimit in seconds: " level.survivorTimelimit
+// infected timelimit
+    level.infectedTimelimit = 200 // in seconds
+    println "[DEBUG] Timelimit in seconds: " level.infectedTimelimit
 
 // Set the new gametype name
     setcvar "g_gametypestring" "28 Frags Later"
@@ -66,7 +56,7 @@ main:
 
 // Set in game TAB information
     setcvar "g_obj_alliedtext1" "[28 Frags Later]"
-    setcvar "g_obj_alliedtext2" "Survival"
+    setcvar "g_obj_alliedtext2" "infected"
     setcvar "g_obj_alliedtext3" ""
     setcvar "g_obj_axistext1" ""
     setcvar "g_obj_axistext2" ""
@@ -97,12 +87,19 @@ main:
             // If current player is alive
             // AND current player is not Spectating
             if (isAlive($player[local.i]) && $player[local.i].dmteam != spectator) {
-                // If current player is not survivor
-                // AND current player is on allies
+                // If current player is not infected
+                // AND current player is on axis
                 // AND current player has spawned in game
-                if ($player[local.i] != level.survivor && $player[local.i].dmteam == allies && $player[local.i].inGame) {
-                    // THEN send current player back to axis
-                    $player[local.i] thread sendToAxis
+
+                // CHANGE SOMETHING HERE
+                // FORCE new players onto AXIS
+                // LEAVE current players that have NOT died on ALLIES
+
+                if ($player[local.i] != level.infected && $player[local.i].dmteam == axis && $player[local.i].inGame) {
+                    if ($player[local.i].infected == 1) {
+                        // THEN send current player back to axis
+                        $player[local.i] thread sendToAxis
+                    }
                 }
             }
 
@@ -111,8 +108,10 @@ main:
             // AND current player is in game
             if ((!isAlive($player[local.i]) || $player[local.i].dmteam == spectator) && $player[local.i].inGame) {
                 // THEN Set current player as dead and not in game
+                // SET PLAYER to be INFECTED
                 $player[local.i].isDone = 0
                 $player[local.i].inGame = 0
+                $player[local.i].infected = 1
             }
 
         }
@@ -121,11 +120,11 @@ main:
         level.inGame = local.inGame // Get number of players in game
         // println "[DEBUG] Players in Game: " level.inGame
 
-        // If there is no survivor, run selecting thread
-        if (level.survivor == NIL) {
+        // If there is no infected, run selecting thread
+        if (level.infected == NIL) {
             waitframe // just in case
-            if (level.survivor == NIL || level.survivor == NULL) {
-                thread selectSurvivor
+            if (level.infected == NIL || level.infected == NULL) {
+                thread selectinfected
             }
         }
         waitframe
@@ -138,8 +137,8 @@ playerThinker: // needs renaming ????????????
     // println "[DEBUG] Running Player Thinker Thread."
 
     self.inGame = 0 // Remove player from game
-    if (self.survivalAmount == NIL) {
-       self.survivalAmount = 0 // If they have never been survivor
+    if (self.infectionAmount == NIL) {
+       self.infectionAmount = 0 // If they have never been infected
     }
 
     // Not sure what this does yet?
@@ -158,8 +157,8 @@ playerThinker: // needs renaming ????????????
     }
 end
 
-// When a player spawns (currently includes survivor), run this script
-// Needs a major rework to NOT include survivor
+// When a player spawns (currently includes infected), run this script
+// Needs a major rework to NOT include infected
 
 spawnPlayer:
     // println "[DEBUG] Running Player Spawn Thread."
@@ -173,10 +172,14 @@ spawnPlayer:
         // Random Sound trigger?
         //local.player.sh_soundtime = level.time + 25.0 + randomfloat(15) // Level Time + 25 + (0 to 15)
         //println "[DEBUG] Spawning Player and setting skin."
+
         local.player.inGame = 1 // Set player as In Game
-        local.player join_team axis // Place player on axis
+        $player[local.i].infected = 0 // Set player as not infected
+        waitframe
+
+        local.player join_team allies
+
         local.player respawn // Spawn the player
-        local.player model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
 
         waitframe
         //println "[DEBUG] Setting Player weapons."
@@ -188,19 +191,19 @@ spawnPlayer:
     }
 end
 
-selectSurvivor:
-    // println "[DEBUG] Selecting Survivor."
+selectinfected:
+    // println "[DEBUG] Selecting infected."
 
     // IF selecting already running then end
-    if (level.selectingSurvivor) {
-        // println "[DEBUG] Survivor exists. Terminating."
+    if (level.selectinginfected) {
+        // println "[DEBUG] infected exists. Terminating."
         end
     }
 
-    //println "[DEBUG] Selecting Survivor. First Time."
+    //println "[DEBUG] Selecting infected. First Time."
 
     local.inGame = 0 // remove from game?
-    local.least = 524288 // Least amount of times to be Survivor for??
+    local.least = 524288 // Least amount of times to be infected for??
 
     // IF number is less then or equal to amount of players in game
     // In other words, loop over script for every player in game
@@ -209,33 +212,34 @@ selectSurvivor:
         // If current player is in game, set local in game
         if ($player[local.i].inGame) {
             local.inGame++
+            $player[local.i].infected = 0 // I THINK this will set everyone to NOT infected at round start. ???????????????????
         }
 
-        // IF local player has NOT been survivor before...
-        if ($player[local.i].survivalAmount != NIL) { // prevent idiotic errors
-            // IF local player has been survivor less then "least"
-            if ($player[local.i].survivalAmount < local.least)
-                local.least = $player[local.i].survivalAmount
+        // IF local player has NOT been infected first before...
+        if ($player[local.i].infectionAmount != NIL) { // prevent idiotic errors
+            // IF local player has been infected less then "least"
+            if ($player[local.i].infectionAmount < local.least)
+                local.least = $player[local.i].infectionAmount
             }
         }
 
         if (local.inGame < 2) { // no point in playing this on your own
-            //println "[DEBUG] Not enough players. Terminating"
+            println "[DEBUG] Not enough players. Terminating"
             fadein 0 0 0 0 1
             end
         }
 
     // don't run this thread again
-    level.selectingSurvivor = 1
+    level.selectinginfected = 1
 
-    local.lastsurvivor = level.survivor
+    local.lastinfected = level.infected
 
-selectSurvivorAgain:
-    println "[DEBUG] Selecting Survivor Again."
-    local.survivor = local.lastsurvivor
+selectinfectedAgain:
+    println "[DEBUG] Selecting infected Again."
+    local.infected = local.lastinfected
 
     local.inGame = 0 // remove from game?
-    local.least = 524288 // Least amount of times to be Survivor for??
+    local.least = 524288 // Least amount of times to be infected for??
 
     // IF number is less then or equal to amount of players in game
     // In other words, loop over script for every player in game
@@ -244,13 +248,14 @@ selectSurvivorAgain:
         // If current player is in game, set local in game
         if ($player[local.i].inGame) {
             local.inGame++
+            $player[local.i].infected = 0 // again, i hope this will set everyone to uninfected.
         }
 
-        // IF local player has been survivor before...
-        if ($player[local.i].survivalAmount != NIL) { // prevent idiotic errors
-            // IF local player has been survivor less then "least"
-            if ($player[local.i].survivalAmount < local.least)
-                local.least = $player[local.i].survivalAmount
+        // IF local player has NOT been infected first before...
+        if ($player[local.i].infectionAmount != NIL) { // prevent idiotic errors
+            // IF local player has been infected less then "least"
+            if ($player[local.i].infectionAmount < local.least)
+                local.least = $player[local.i].infectionAmount
             }
         }
 
@@ -259,227 +264,138 @@ selectSurvivorAgain:
             end
         }
 
-        while ((local.survivor == local.lastsurvivor || local.survivor.dmteam == spectator) && $player.size > 1) {
-            local.survivor = $player[randomint($player.size) + 1]
+        while ((local.infected == local.lastinfected || local.infected.dmteam == spectator) && $player.size > 1) {
+            local.infected = $player[randomint($player.size) + 1]
+            $player[local.i].infected = 1 // SET the initial infected player to be infected all the time for this round.
             waitframe
         }
 
-        if (local.survivor == NIL || local.survivor == NULL || local.survivor.survivalAmount > local.least) {
+        if (local.infected == NIL || local.infected == NULL || local.infected.infectionAmount > local.least) {
             waitframe
-            goto selectSurvivorAgain
+            goto selectinfectedAgain
         }
 
-        local.survivor.survivalAmount++ // account for the times they played the murderer for
+        local.infected.infectionAmount++ // account for the times they played the murderer for
 
-        level.survivor = local.survivor
+        level.infected = local.infected
 
-        while (!level.survivor.inGame) {
+        while (!level.infected.inGame) {
            waitframe
         }
 
-        level.selectingSurvivor = 0
+        level.selectinginfected = 0
         level.proximityTrigger = 0
 
-        // Setup Survivor
-        println "[DEBUG] Setting up the Survivor."
+        // Setup infected
+        println "[DEBUG] Setting up the first infected player."
         waitframe
         fadein 10 0 0 0 1
         waitframe
-        local.survivor join_team allies
-        local.survivor respawn
+        local.infected respawn
         waitframe
 
-        local.survivor join_team allies // make survivor join allies
-        local.survivor respawn // spawn the survivor
-        local.survivor model "models/player/allied_Magna_Cartas_police.tik" // set survivor skin (map dependant?)
+        local.infected join_team axis // make infected join axis
+        local.infected respawn // spawn the infected
+        local.infected model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
         waitframe
 
-        local.survivor takeall // take all guns
-        local.survivor give "models/weapons/shotgun.tik" // give shotgun (player number dependant?)
+        local.infected takeall // take all guns
+        local.infected give "models/weapons/colt45.tik"
         waitframe
 
-        local.survivor useweaponclass heavy // select shotgun
-        wait 5 // wait 5 seconds
+        local.infected useweaponclass pistol
+        wait 4 // wait 5 seconds
 
-        local.survivor iprint "You are the last Survivor!" // message JUST the survivor
+        local.infected iprint "You are infected..." // message JUST the infected
+        wait 1
+        local.infected iprint "Try to spread the infection!" // message JUST the infected
         // $world playsound lookout // play "lookout" sound
         waitframe
 
-        // local.survivor face ( 0 local.survivor.viewangles[1] 0 ) // WHAT DOES THIS DO?
+        // local.infected face ( 0 local.infected.viewangles[1] 0 ) // WHAT DOES THIS DO?
 
-        local.survivor.survivorExpiry = level.time + level.survivorTimelimit // current level time + timelimit that's set?
+        local.infected.infectedExpiry = level.time + level.infectedTimelimit // current level time + timelimit that's set?
 
-       // IF Survivor is alive
-       // AND Survivor is current survivor
-       // AND Survivor is on allies
-       while (isAlive(local.survivor) && level.survivor == local.survivor && local.survivor.dmteam == allies) {
-            // println "[DEBUG] Formating time."
-            // Work out the time left?
-            local.lastmin = local.min
-            local.lastsec = local.sec
-            local.sec = int(local.survivor.survivorExpiry - level.time)
-
-            // convert seconds to minutes?
-            local.min = int(local.sec / 60)
-            local.sec -= local.min * 60
-
-            // display the time
-            if (local.sec != local.lastsec || local.min != local.lastmin) {
-                // println "[DEBUG] Displaying time."
-                huddraw_alpha 107 1
-                huddraw_rect 107 500 35 640 480
-                huddraw_virtualsize 107 1
-                huddraw_font 107 courier-20
-                local.timestr = local.min + ":"
-            }
-
-            // I think this is formatting the seconds
-            if (local.sec < 10) {
-                // println "[DEBUG] Formating time a bit more."
-                local.timestr = local.timestr + "0"
-                local.timestr = local.timestr + local.sec
-            }
-
-            // this changes the time colour when there isn't much left
-            if (local.min == 0) {
-                // 30 seconds or less
-                if (local.sec <= 30 && local.sec > 10) {
-                    //println "[DEBUG] Changing time to Yellow."
-                    huddraw_color 107 1 1 0 // yellow
-                }
-                // 10 seconds or less
-                else if (local.sec <= 10) {
-                    //println "[DEBUG] Changing time to Red."
-                    huddraw_color 107 1 0 0 // red
-                }
-            }
-
-            // code from SH mod.
-            /*
-            if (local.survivor.fireheld) {
-                println "[DEBUG] Survivor has fired or right clicked: " local.survivor.fireheld
-                if (local.survivor.sh_hidden) {
-                        println "[DEBUG] [2] What does this do: " local.survivor.sh_hidden
-                }
-            }*/
-
-            // Old code from horror survival! ???????????????????????????????????????????????
+        // THIS NEEDS NEW COMMANDS TO DETECT WHEN EVERYONE HAS BEEN INFECTED ?????????????????????????????????????
+       while (isAlive(local.infected) && level.infected == local.infected && local.infected.dmteam == axis) {
             for (local.i = 1; local.i <= $player.size; local.i++) {
-
+                // If local player is not in game (dead?)
                 if (!$player[local.i].inGame) {
-
-                    if ($player[local.i].dmteam != spectator) {
-                        // println "[DEBUG] Player not in spectator."
+                    // if local player is not in spectator
+                    if ($player[local.i].dmteam != spectator && $player[local.i].dmteam != axis) {
+                        // PROBABLY TIME TO SET THEM AS INFECTED
+                        // println "[DEBUG] Another Player Infected."
+                        $player[local.i].infected = 1
                         $player[local.i] stufftext "+attackprimary"
                         waitframe
                         $player[local.i] stufftext "-attackprimary"
                     }
+                    if ($player[local.i].dmteam != spectator && $player[local.i].dmteam != allies) {
+                        // PROBABLY TIME TO SET THEM AS INFECTED
+                        println "[DEBUG] Another Player Infected."
+                        $player[local.i].infected = 1
+
+                        $player[local.i] join_team axis // make infected join axis
+                        waitframe
+                        $player[local.i] respawn // spawn the infected
+                        $player[local.i] model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
+                    }
                     continue
                 }
-
-                if ($player[local.i].dmteam == allies) {
-                    // println "[DEBUG] [2] Has anything happened? " $player[local.i].dmteam
-                    continue
-                }
-
-                // Infected Proximity triggers to help them search for a camping survivor!
-                if (vector_length ($player[local.i].origin - local.survivor.origin) <= 500 && level.proximityTrigger == 0) {
-                    $player[local.i] stufftext "sayteam I'm close to the survivor!"
-                    local.survivor stufftext "sayteam I hear them, they are getting closer!"
-                    level.proximityTrigger = 1
-                }
-
-                while (vector_length ($player[local.i].origin - local.survivor.origin) > 500 && level.proximityTrigger == 1) {
-                    wait 20
-                    // println "[DEBUG] Proximity Trigger OFF"
-                    level.proximityTrigger = 0
-                }
-
-            }
-
-            // IF level time is more or equal to survivor time left?
-            if (level.time >= local.survivor.survivorExpiry) {
-                println "[DEBUG] Time limit has been reached: " local.timeLimitHit
-                local.timeLimitHit = 1 // time limit has been reached
-                break
             }
             waitframe
 
         } // end of while loop
 
-        local.survivor.sh_hidden = 0 // is this relating to hiding/unhiding from original SH mod? Can it be removed????
         println "[DEBUG] End of game."
 
-        // IF the timelimit has been reached (this is set with the code a few lines above)
-        // ELSE tell everyone the survivor has died
-        if (local.timeLimitHit){
-            iprintlnbold_noloc "Time limit reached!"
-        }
-        else {
-            iprintlnbold_noloc "The Survivor has been infected!"
-        }
+        // Everyone is infected!
+        iprintlnbold_noloc "There are no survivors left!"
 
         waitframe
         fadeout 10 0 0 0 1
         wait 5
-        iprintlnbold_noloc "Selecting new survivor..."
+        iprintlnbold_noloc "New infection..."
 
-        println "[DEBUG] Clearing survivor settings."
+        println "[DEBUG] Clearing infection settings."
 
-        local.survivor.isDone = 0 // has died?
-        local.survivor.inGame = 0 // is not in game anymore
-        huddraw_alpha 107 0 // remove the time from screen?
+        local.infected.isDone = 0 // has died?
+        local.infected.inGame = 0 // is not in game anymore
+        $player[local.i].infected = 0 // No one is infected anymore
 
-        // If the survivor is NOT alive then keep waiting?
-        while (!isAlive(local.survivor)) {
-            println "[DEBUG] Survivor is not alive..."
+        // If the infected is NOT alive then keep waiting?
+        while (!isAlive(local.infected)) {
+            println "[DEBUG] infected is not alive..."
             waitframe
-            local.survivor stufftext "+attackprimary"
+            local.infected stufftext "+attackprimary"
             waitframe
-            local.survivor stufftext "-attackprimary"
+            local.infected stufftext "-attackprimary"
         }
 
-        // If the survivor is NOT on Axis
-        while (local.survivor.dmteam != axis) {
-            println "[DEBUG] Sending Survivor to axis"
-            local.survivor join_team axis // Place onto Axis
-            // local.survivor model "models/player/german_[Kapo]_Prisioner_1.tik" // Change skin
-            local.survivor respawn // spawn player!
+        // If the infected is NOT on Axis
+        while (local.infected.dmteam != axis) {
+            println "[DEBUG] Sending infected to axis"
+            local.infected join_team axis // Place onto axis
+            local.infected model "models/player/german_[Kapo]_Prisioner_1.tik" // Change skin
+            // local.infected respawn // spawn player!
             waitframe
         }
 
-        local.survivor respawn // last but not least, spawn the survivor after completely setting him up!
-        level.survivor = NIL // and finally reset?
+        local.infected respawn // last but not least, spawn the infected after completely setting him up!
+        level.infected = NIL // and finally reset?
 
 end
-// end of "survivor select again" thread
-
-
-updateTimes:
-    local.str = "" // set a blank string to use
-
-    // Loop around each player
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-
-        // if there is a survival amount set...
-        if ($player[local.i].survivalAmount) {
-            local.str = local.str + string($player[local.i].entnum) + ":" + string($player[local.i].survivalAmount) + " "
-        }
-
-    }
-    game.survivors = local.str
-end
+// end of "infected select again" thread
 
 sendToAxis:
     println "[DEBUG] Switching a player to correct team."
-
     self spectator
     waitframe
-    self join_team axis
     println "[DEBUG] Wait 5."
     wait 5
+    self join_team axis
     self respawn
-    // self model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
+    self model "models/player/german_[Kapo]_Prisioner_1.tik" // Trigger infected skin
     waitframe
     self takeall // Take all weapons away from player
     self item "models/weapons/colt45.tik" // Give player customised pistol NEEDS MAJOR REWORK (e.g don't use default pistol?)
