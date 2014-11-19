@@ -1,0 +1,39 @@
+// 28 Frags Later Mod
+// Written by Ophis
+// With help by Falco
+// Contact: ophis@daphi.co.uk
+//
+// Special thanks:
+
+main:
+
+    // 28 Frags Later Gametypes
+    // 0 = Off
+    // 1 = Outbreak
+    // 2 = Infection
+    // 3 = Survival
+
+    if (int(getcvar(28FragsLater)) == 0) {
+        println "[DEBUG] No gametype selected. Terminating."
+        end
+    }
+
+    println "[DEBUG] Gametype Selected: " 28FragsLater
+    waitframe
+
+    if (int(getcvar(28FragsLater)) == 1) {
+        exec global/28FL-Outbreak.scr
+        end
+    }
+    if (int(getcvar(28FragsLater)) == 2) {
+        exec global/28FL-Infection.scr
+        end
+    }
+    if (int(getcvar(28FragsLater)) == 3) {
+        exec global/28FL-Survival.scr
+        end
+    }
+
+    println "[DEBUG] Something went wrong during gametype selection."
+
+end
