@@ -12,12 +12,14 @@ Originally created 2004-2006 by Ophis (with help from Falco)
 ## Game Modes
 
 ### 🎯 Survival Mode (Mode 3)
-**One survivor vs everyone else**
+**One survivor vs everyone else - with dynamic scoring**
 
 - One player is randomly selected as the **Survivor** (Allied team)
-- Survivor gets a shotgun and 200 seconds to survive
+- Survivor gets a shotgun and must survive to win
 - All other players are **Infected** (Axis team) with pistols
-- If survivor survives the time limit, they win the round
+- **Dynamic Survival Time:** Base time is 5 minutes, reduced by 5% per infected player
+- Minimum survival time is 1 minute (even with many infected players)
+- If survivor survives the full time, they win the round
 - If infected kill the survivor, new survivor is selected
 - Fair selection algorithm ensures everyone gets a turn
 
@@ -58,6 +60,8 @@ Originally created 2004-2006 by Ophis (with help from Falco)
 - Custom survivor and infected player skins
 
 ### Gameplay Mechanics
+- **Dynamic Survival Time** - Time adjusts based on infected player count (5% reduction per infected)
+- **Custom Scoring System** - Survivor wins by surviving the full duration; time scales with difficulty
 - **Fair survivor selection** - Tracks how many times each player has been survivor
 - **Proximity alerts** - Infected players alerted when near survivor
 - **Timer display** - Color-coded countdown (white → yellow at 30s → red at 10s)
@@ -74,11 +78,15 @@ Originally created 2004-2006 by Ophis (with help from Falco)
 All gameplay settings can be easily adjusted at the top of `global/28fragslater.scr`:
 
 ```
-local.SURVIVOR_TIME_LIMIT = 200        // Seconds survivor must survive
-local.MIN_PLAYERS = 2                  // Minimum players to start
-local.PROXIMITY_DISTANCE = 500         // Distance for proximity alerts
-local.TIMER_WARNING_YELLOW = 30        // Yellow warning threshold
-local.TIMER_WARNING_RED = 10           // Red warning threshold
+// Dynamic Survival Time (Option 3 Scoring System)
+local.DEFAULT_SURVIVAL_TIME = 300       // Default 5 minutes
+local.TIME_REDUCTION_PERCENT = 5        // 5% reduction per infected player
+local.MIN_SURVIVAL_TIME = 60            // Minimum 1 minute
+
+local.MIN_PLAYERS = 2                   // Minimum players to start
+local.PROXIMITY_DISTANCE = 500          // Distance for proximity alerts
+local.TIMER_WARNING_YELLOW = 30         // Yellow warning threshold
+local.TIMER_WARNING_RED = 10            // Red warning threshold
 ```
 
 ## Refactoring (2025)
