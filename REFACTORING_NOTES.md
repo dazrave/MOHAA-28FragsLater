@@ -180,12 +180,15 @@ if (local.sec != local.lastSec || local.min != local.lastMin) {
 
 **Features:**
 - Selects one "Patient Zero"
-- All other players start as survivors
-- Survivors become infected when killed
-- Round ends when all survivors infected
+- All players equipped with pistols (fair weapons)
+- Survivors become infected when killed (conversion on respawn)
+- Late joiners automatically become infected
+- 5-minute round timer with HUD countdown
+- Survivors win if they survive the timer
+- Round ends when all survivors infected OR timer expires
 - Tracks infection statistics per player
 
-**Implementation:** `gameLoopInfection()`, `selectPatientZero()`, `monitorInfection()`
+**Implementation:** `gameLoopInfection()`, `selectPatientZero()`, `monitorInfection()`, `monitorInfectionDeaths()`, `displayInfectionTimer()`, `spawnAsSurvivorWithPistol()`
 
 ### 3. **Mode Selection System**
 **Original:** Only Survival mode worked (mode 3).
