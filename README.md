@@ -66,7 +66,11 @@ Originally created 2004-2006 by Ophis (with help from Falco)
 - **Dynamic Survival Time** - Time adjusts based on infected player count (5% reduction per infected)
 - **Custom Scoring System** - Survivor wins by surviving the full duration; time scales with difficulty
 - **Fair survivor selection** - Tracks how many times each player has been survivor
-- **Proximity alerts** - Infected players alerted when near survivor
+- **Proximity messages** - Anti-camping system shows graduated distance hints to infected players after 1 minute of no contact:
+  - **HOT** (within 10m) - Resets proximity timer
+  - **WARM** (within 25m) - Getting closer
+  - **COLD** (within 50m) - On the trail
+  - Nothing shown beyond 100m
 - **Timer display** - Color-coded countdown (white → yellow at 30s → red at 10s)
 - **Auto team enforcement** - Players automatically placed on correct teams
 
@@ -87,7 +91,13 @@ local.TIME_REDUCTION_PERCENT = 5        // 5% reduction per infected player
 local.MIN_SURVIVAL_TIME = 60            // Minimum 1 minute
 
 local.MIN_PLAYERS = 2                   // Minimum players to start
-local.PROXIMITY_DISTANCE = 500          // Distance for proximity alerts
+
+// Proximity message system (prevents camping)
+local.PROXIMITY_TIMEOUT = 60            // Seconds before showing hints (1 minute)
+local.PROXIMITY_HOT = 10                // Distance for "hot" indicator
+local.PROXIMITY_WARM = 25               // Distance for "warm" indicator  
+local.PROXIMITY_COLD = 50               // Distance for "cold" indicator
+local.PROXIMITY_NONE = 100              // Show nothing beyond this distance
 local.TIMER_WARNING_YELLOW = 30         // Yellow warning threshold
 local.TIMER_WARNING_RED = 10            // Red warning threshold
 ```

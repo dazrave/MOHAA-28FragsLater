@@ -28,9 +28,16 @@ local.REQUIRED_GAMETYPE = 2      // Team Deathmatch
 local.SURVIVOR_TIME_LIMIT = 200  // Seconds survivor has to survive (LEGACY - not used with dynamic timing)
 local.INFECTION_TIME_LIMIT = 300 // 5 minutes for infection mode
 local.MIN_PLAYERS = 2            // Minimum players to start game
-local.PROXIMITY_DISTANCE = 500   // Distance for proximity alerts
+local.PROXIMITY_DISTANCE = 500   // Distance for proximity alerts (LEGACY - kept for compatibility)
 local.TIMER_WARNING_YELLOW = 30  // Yellow warning at 30 seconds
 local.TIMER_WARNING_RED = 10     // Red warning at 10 seconds
+
+// Proximity message system (prevents camping)
+local.PROXIMITY_TIMEOUT = 60     // Seconds before showing proximity hints (1 minute)
+local.PROXIMITY_HOT = 10         // Distance in meters for "hot" indicator
+local.PROXIMITY_WARM = 25        // Distance in meters for "warm" indicator
+local.PROXIMITY_COLD = 50        // Distance in meters for "cold" indicator
+local.PROXIMITY_NONE = 100       // Distance in meters - show nothing beyond this
 
 // Dynamic Survival Time (Option 3 Scoring System)
 local.DEFAULT_SURVIVAL_TIME = 300     // Default 5 minutes
@@ -102,6 +109,7 @@ main:
     level.proximityTrigger = 0
     level.selectingSurvivor = 0
     level.survivor = NIL
+    level.lastProximityTime = 0  // Track when players were last in proximity
 
     println "[28FL] Default survival time: " + level.survivorTimelimit + " seconds"
 
@@ -555,22 +563,170 @@ forcePlayerToSpawn local.player:
 end
 
 checkProximity local.survivor:
+    // Find closest infected player to survivor
+    local.closestDistance = 999999
+    local.closestInfected = NIL
+    
     for (local.i = 1; local.i <= $player.size; local.i++) {
         if (!$player[local.i].inGame) continue
         if ($player[local.i].dmteam != axis) continue
-
+        
         local.distance = vector_length($player[local.i].origin - local.survivor.origin)
-
-        if (local.distance <= local.PROXIMITY_DISTANCE && level.proximityTrigger == 0) {
-            $player[local.i] stufftext "sayteam I'm close to the survivor!"
-            local.survivor stufftext "sayteam I hear them, they are getting closer!"
-            level.proximityTrigger = 1
-        }
-
-        if (local.distance > local.PROXIMITY_DISTANCE && level.proximityTrigger == 1) {
-            level.proximityTrigger = 0
+        
+        if (local.distance < local.closestDistance) {
+            local.closestDistance = local.distance
+            local.closestInfected = $player[local.i]
         }
     }
+    
+    // If no infected players found, skip
+    if (local.closestInfected == NIL) {
+        end
+    }
+    
+    // Check if within "hot" range (10m) - reset timer
+    if (local.closestDistance <= local.PROXIMITY_HOT) {
+        level.lastProximityTime = level.time
+        
+        // Clear any previous proximity indicators
+        if (level.proximityTrigger == 1) {
+            level.proximityTrigger = 0
+        }
+        end
+    }
+    
+    // Check if we should show proximity indicators (after 1 minute timeout)
+    local.timeSinceProximity = level.time - level.lastProximityTime
+    
+    if (local.timeSinceProximity < local.PROXIMITY_TIMEOUT) {
+        // Not enough time has passed, don't show indicators
+        end
+    }
+    
+    // Show graduated proximity messages based on distance
+    local.proximityMessage = ""
+    
+    if (local.closestDistance <= local.PROXIMITY_HOT) {
+        // Already handled above - within 10m resets timer
+        local.proximityMessage = "HOT"
+    } else if (local.closestDistance <= local.PROXIMITY_WARM) {
+        // 25m or less
+        local.proximityMessage = "WARM"
+    } else if (local.closestDistance <= local.PROXIMITY_COLD) {
+        // 50m or less
+        local.proximityMessage = "COLD"
+    } else if (local.closestDistance <= local.PROXIMITY_NONE) {
+        // Between 50m and 100m - no message
+        local.proximityMessage = ""
+    } else {
+        // Beyond 100m - no message
+        local.proximityMessage = ""
+    }
+    
+    // Display message to infected players if there's something to show
+    if (local.proximityMessage != "") {
+        // Only show message once per second to avoid spam
+        if (level.proximityTrigger == 0) {
+            for (local.i = 1; local.i <= $player.size; local.i++) {
+                if (!$player[local.i].inGame) continue
+                if ($player[local.i].dmteam != axis) continue
+                
+                $player[local.i] iprintln "Proximity: " + local.proximityMessage
+            }
+            
+            level.proximityTrigger = 1
+            thread resetProximityTrigger
+        }
+    } else {
+        // No message to show, clear trigger
+        level.proximityTrigger = 0
+    }
+end
+
+checkProximityAllSurvivors:
+    // Find closest survivor to any infected player
+    local.closestDistance = 999999
+    
+    for (local.i = 1; local.i <= $player.size; local.i++) {
+        if (!$player[local.i].inGame) continue
+        if ($player[local.i].dmteam != allies) continue  // Only check survivors
+        
+        // Check distance to closest infected
+        for (local.j = 1; local.j <= $player.size; local.j++) {
+            if (!$player[local.j].inGame) continue
+            if ($player[local.j].dmteam != axis) continue  // Only check infected
+            
+            local.distance = vector_length($player[local.i].origin - $player[local.j].origin)
+            
+            if (local.distance < local.closestDistance) {
+                local.closestDistance = local.distance
+            }
+        }
+    }
+    
+    // Check if within "hot" range (10m) - reset timer
+    if (local.closestDistance <= local.PROXIMITY_HOT) {
+        level.lastProximityTime = level.time
+        
+        // Clear any previous proximity indicators
+        if (level.proximityTrigger == 1) {
+            level.proximityTrigger = 0
+        }
+        end
+    }
+    
+    // Check if we should show proximity indicators (after 1 minute timeout)
+    local.timeSinceProximity = level.time - level.lastProximityTime
+    
+    if (local.timeSinceProximity < local.PROXIMITY_TIMEOUT) {
+        // Not enough time has passed, don't show indicators
+        end
+    }
+    
+    // Show graduated proximity messages based on closest distance
+    local.proximityMessage = ""
+    
+    if (local.closestDistance <= local.PROXIMITY_HOT) {
+        // Already handled above - within 10m resets timer
+        local.proximityMessage = "HOT"
+    } else if (local.closestDistance <= local.PROXIMITY_WARM) {
+        // 25m or less
+        local.proximityMessage = "WARM"
+    } else if (local.closestDistance <= local.PROXIMITY_COLD) {
+        // 50m or less
+        local.proximityMessage = "COLD"
+    } else if (local.closestDistance <= local.PROXIMITY_NONE) {
+        // Between 50m and 100m - no message
+        local.proximityMessage = ""
+    } else {
+        // Beyond 100m - no message
+        local.proximityMessage = ""
+    }
+    
+    // Display message to infected players if there's something to show
+    if (local.proximityMessage != "") {
+        // Only show message once per second to avoid spam
+        if (level.proximityTrigger == 0) {
+            for (local.i = 1; local.i <= $player.size; local.i++) {
+                if (!$player[local.i].inGame) continue
+                if ($player[local.i].dmteam != axis) continue
+                
+                $player[local.i] iprintln "Proximity: " + local.proximityMessage
+            }
+            
+            level.proximityTrigger = 1
+            thread resetProximityTrigger
+        }
+    } else {
+        // No message to show, clear trigger
+        level.proximityTrigger = 0
+    }
+end
+
+resetProximityTrigger:
+    // Reset trigger after 1 second to allow next message
+    wait 1
+    level.proximityTrigger = 0
 end
 
 calculateSurvivalTime:
@@ -677,6 +833,7 @@ runSurvivalRound:
 
     level.selectingSurvivor = 0
     level.proximityTrigger = 0
+    level.lastProximityTime = level.time  // Initialize proximity tracking for new round
 
     // Setup survivor
     println "[28FL] Selected survivor: " + local.survivor.netname
@@ -817,6 +974,12 @@ gameLoopOutbreak:
         // Select initial survivors
         if (level.outbreakSurvivors == NIL) {
             thread selectOutbreakSurvivors
+            level.lastProximityTime = level.time  // Initialize proximity tracking
+        }
+        
+        // Check proximity if survivors are active
+        if (level.outbreakSurvivors != NIL) {
+            thread checkProximityAllSurvivors
         }
 
         waitframe
@@ -893,6 +1056,7 @@ gameLoopInfection:
             // Start round with timer
             level.infectionRoundStarted = 1
             level.infectionRoundExpiry = level.time + local.INFECTION_TIME_LIMIT
+            level.lastProximityTime = level.time  // Initialize proximity tracking
             
             // Display round start message
             iprintlnbold_noloc "Infection round started! 5 minutes to survive!"
@@ -906,6 +1070,11 @@ gameLoopInfection:
 
         // Monitor infection spread
         thread monitorInfection
+        
+        // Check proximity if round is active
+        if (level.infectionRoundStarted) {
+            thread checkProximityAllSurvivors
+        }
 
         waitframe
     }
