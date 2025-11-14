@@ -21,8 +21,22 @@ local.GAMEMODE_INFECTION = 2     // Classic infection - one infected infects oth
 local.GAMEMODE_SURVIVAL = 3      // One survivor vs all infected
 
 // Script configuration
-local.SCRIPT_VERSION = "1.0.0"
+local.SCRIPT_VERSION = "1.0.1"
 local.REQUIRED_GAMETYPE = 2      // Team Deathmatch
+
+// Logging configuration
+// Set 28FL_LogLevel cvar to control logging detail:
+//   0 = Off (no logging)
+//   1 = Error (critical errors only)
+//   2 = Info (default - important events)
+//   3 = Debug (detailed debugging info)
+//   4 = Verbose (all events including player actions)
+local.LOGLEVEL_OFF = 0
+local.LOGLEVEL_ERROR = 1
+local.LOGLEVEL_INFO = 2
+local.LOGLEVEL_DEBUG = 3
+local.LOGLEVEL_VERBOSE = 4
+local.DEFAULT_LOGLEVEL = 2       // Default to Info level
 
 // Gameplay constants
 local.SURVIVOR_TIME_LIMIT = 200  // Seconds survivor has to survive (LEGACY - not used with dynamic timing)
@@ -76,6 +90,159 @@ local.MAX_SURVIVOR_COUNT = 524288  // Maximum times someone can be survivor
 
 
 // ============================================================================
+// LOGGING SYSTEM
+// ============================================================================
+
+log local.level local.message:
+    // Central logging function - respects log level configuration
+    // Usage: thread log local.LOGLEVEL_INFO "Your message here"
+    
+    // Get configured log level (default to INFO if not set)
+    local.configuredLevel = int(getcvar(28FL_LogLevel))
+    if (local.configuredLevel == NIL || local.configuredLevel < 0) {
+        local.configuredLevel = local.DEFAULT_LOGLEVEL
+    }
+    
+    // Only log if message level is at or below configured level
+    if (local.level > local.configuredLevel) {
+        return
+    }
+    
+    // Format log level prefix
+    local.prefix = "[28FL] "
+    switch (local.level) {
+        case 1:
+            local.prefix = "[28FL-ERROR] "
+            break
+        case 2:
+            local.prefix = "[28FL-INFO] "
+            break
+        case 3:
+            local.prefix = "[28FL-DEBUG] "
+            break
+        case 4:
+            local.prefix = "[28FL-VERBOSE] "
+            break
+    }
+    
+    // Output to server console
+    println local.prefix + local.message
+    
+    // Also write to game log file if g_log is enabled
+    // logprint formats: "LogType: message\n"
+    logprint local.prefix + local.message + "\n"
+end
+
+logError local.message:
+    thread log local.LOGLEVEL_ERROR local.message
+end
+
+logInfo local.message:
+    thread log local.LOGLEVEL_INFO local.message
+end
+
+logDebug local.message:
+    thread log local.LOGLEVEL_DEBUG local.message
+end
+
+logVerbose local.message:
+    thread log local.LOGLEVEL_VERBOSE local.message
+end
+
+
+// ============================================================================
+// RCON COMMAND MONITORING
+// ============================================================================
+
+monitorRconCommands:
+    // Monitor cvars for RCON commands
+    // Server admins can use: set 28FL_Command "command_name"
+    level.lastCommand = ""
+    
+    while (1) {
+        local.command = getcvar(28FL_Command)
+        
+        if (local.command != NIL && local.command != "" && local.command != level.lastCommand) {
+            level.lastCommand = local.command
+            thread logInfo "RCON command received: " + local.command
+            thread processRconCommand local.command
+        }
+        
+        wait 1
+    }
+end
+
+processRconCommand local.command:
+    switch (local.command) {
+        case "restart":
+            thread logInfo "RCON: Restarting current game mode"
+            iprintlnbold_noloc "Server admin restarting game..."
+            // Reset game state based on mode
+            if (level.gameMode == local.GAMEMODE_SURVIVAL) {
+                level.survivor = NIL
+                thread initSurvivalMode
+            } else if (level.gameMode == local.GAMEMODE_OUTBREAK) {
+                thread initOutbreakMode
+            } else if (level.gameMode == local.GAMEMODE_INFECTION) {
+                level.infectionActive = 0
+                level.infectionRoundStarted = 0
+                wait 1
+                level.infectionActive = 1
+                thread initInfectionMode
+            }
+            break
+            
+        case "status":
+            thread logInfo "=== SERVER STATUS ==="
+            thread logInfo "Game Mode: " + level.gameMode
+            thread logInfo "Players: " + thread getPlayerCount
+            thread logInfo "Script Version: " + level.scriptVersion
+            if (level.gameMode == local.GAMEMODE_SURVIVAL && level.survivor != NIL) {
+                thread logInfo "Current Survivor: " + level.survivor.netname
+            }
+            thread logInfo "===================="
+            break
+            
+        case "listplayers":
+            thread logInfo "=== PLAYER LIST ==="
+            for (local.i = 1; local.i <= $player.size; local.i++) {
+                if ($player[local.i].inGame) {
+                    local.teamName = "spectator"
+                    if ($player[local.i].dmteam == allies) {
+                        local.teamName = "survivor"
+                    } else if ($player[local.i].dmteam == axis) {
+                        local.teamName = "infected"
+                    }
+                    thread logInfo "  " + $player[local.i].netname + " (" + local.teamName + ")"
+                }
+            }
+            thread logInfo "===================="
+            break
+            
+        case "nextround":
+            thread logInfo "RCON: Forcing next round"
+            iprintlnbold_noloc "Server admin forcing next round..."
+            if (level.gameMode == local.GAMEMODE_SURVIVAL) {
+                level.survivor = NIL
+            } else if (level.gameMode == local.GAMEMODE_INFECTION) {
+                level.infectionActive = 0
+                level.infectionRoundStarted = 0
+                wait 1
+                level.infectionActive = 1
+            }
+            break
+            
+        default:
+            thread logInfo "RCON: Unknown command: " + local.command
+            break
+    }
+    
+    // Clear the command cvar
+    setcvar "28FL_Command" ""
+end
+
+
+// ============================================================================
 // MAIN ENTRY POINT
 // ============================================================================
 
@@ -86,11 +253,26 @@ main:
     }
 
     local.gameMode = int(getcvar(28FragsLater))
+    
+    // Initialize logging level
+    local.configuredLevel = int(getcvar(28FL_LogLevel))
+    if (local.configuredLevel == NIL || local.configuredLevel < 0) {
+        setcvar "28FL_LogLevel" local.DEFAULT_LOGLEVEL
+        local.configuredLevel = local.DEFAULT_LOGLEVEL
+    }
+    
     println "[28FL] Starting 28 Frags Later Mod v" + local.SCRIPT_VERSION
     println "[28FL] Game Mode: " + local.gameMode
+    println "[28FL] Log Level: " + local.configuredLevel
+    thread logInfo "==================================================================="
+    thread logInfo "28 Frags Later Mod v" + local.SCRIPT_VERSION + " - Starting"
+    thread logInfo "Game Mode: " + local.gameMode
+    thread logInfo "Log Level: " + local.configuredLevel + " (0=Off,1=Error,2=Info,3=Debug,4=Verbose)"
+    thread logInfo "==================================================================="
 
     // Prevent duplicate script execution
     if (level.isRunning) {
+        thread logError "Script already running. Terminating."
         println "[28FL] ERROR: Script already running. Terminating."
         end
     }
@@ -98,6 +280,7 @@ main:
 
     // Validate Team Deathmatch is active
     if (int(getcvar(g_gametype)) != local.REQUIRED_GAMETYPE) {
+        thread logError "Requires Team Deathmatch (g_gametype 2). Current: " + getcvar(g_gametype)
         println "[28FL] ERROR: Requires Team Deathmatch (g_gametype 2). Terminating."
         end
     }
@@ -111,19 +294,26 @@ main:
     level.survivor = NIL
     level.lastProximityTime = 0  // Track when players were last in proximity
 
+    thread logInfo "Default survival time: " + level.survivorTimelimit + " seconds"
     println "[28FL] Default survival time: " + level.survivorTimelimit + " seconds"
 
     // Set game type display name
     setcvar "g_gametypestring" "28 Frags Later"
 
+    // Start RCON command monitor
+    thread monitorRconCommands
+    thread logInfo "RCON command monitor started (use cvar 28FL_Command)"
+
     // Wait for game initialization
     level waittill prespawn
+    thread logDebug "Prespawn phase started"
     println "[28FL] Prespawn phase started"
 
     // Spawn script master
     local.master = spawn ScriptMaster
 
     level waittill spawn
+    thread logInfo "Spawn phase started - players can now join"
     println "[28FL] Spawn phase started"
 
     // Initialize visual effects
@@ -135,14 +325,17 @@ main:
     // Start game mode
     switch (level.gameMode) {
         case local.GAMEMODE_OUTBREAK:
+            thread logInfo "Starting Outbreak Mode (multiple survivors)"
             println "[28FL] Starting Outbreak Mode"
             thread gameLoopOutbreak
             break
         case local.GAMEMODE_INFECTION:
+            thread logInfo "Starting Infection Mode (patient zero)"
             println "[28FL] Starting Infection Mode"
             thread gameLoopInfection
             break
         case local.GAMEMODE_SURVIVAL:
+            thread logInfo "Starting Survival Mode (one survivor)"
             println "[28FL] Starting Survival Mode"
             thread gameLoopSurvival
             break
@@ -383,6 +576,8 @@ playerThinker:
     if (self.infectionAmount == NIL) {
         self.infectionAmount = 0
     }
+    
+    thread logVerbose "Player joined: " + self.netname
 
     // Create spawn trigger for this player
     local.spawnTrigger = spawn trigger_multiple origin self.origin
@@ -396,6 +591,7 @@ playerThinker:
     }
 
     // Cleanup
+    thread logVerbose "Player disconnected: " + self.netname
     if (local.spawnTrigger) {
         local.spawnTrigger delete
     }
@@ -407,10 +603,12 @@ onPlayerSpawn:
         self delete
 
         local.player.inGame = 1
+        thread logVerbose "Player spawned: " + local.player.netname
 
         // Handle infection mode late joiners
         if (level.gameMode == 2 && level.infectionActive && level.infectionRoundStarted) {
             // Late joiners become infected
+            thread logDebug "Late joiner " + local.player.netname + " spawning as infected"
             thread spawnAsInfected local.player
             local.player iprint "Round in progress - you are infected!"
         } else {
@@ -421,6 +619,7 @@ onPlayerSpawn:
 end
 
 spawnAsInfected local.player:
+    thread logVerbose "Spawning " + local.player.netname + " as infected"
     local.player join_team axis
     local.player respawn
     local.player model local.MODEL_INFECTED
@@ -434,6 +633,7 @@ spawnAsInfected local.player:
 end
 
 spawnAsSurvivor local.player:
+    thread logInfo "Spawning " + local.player.netname + " as survivor (shotgun)"
     fadein 10 0 0 0 1
     waitframe
 
@@ -455,6 +655,7 @@ end
 
 spawnAsSurvivorWithPistol local.player:
     // Used in infection mode - survivors get pistols
+    thread logInfo "Spawning " + local.player.netname + " as survivor (pistol - infection mode)"
     fadein 10 0 0 0 1
     waitframe
 
@@ -473,6 +674,7 @@ spawnAsSurvivorWithPistol local.player:
 end
 
 convertToInfected local.player:
+    thread logInfo "Converting " + local.player.netname + " to infected (killed by infected)"
     local.player spectator
     waitframe
     local.player join_team axis
@@ -760,6 +962,7 @@ end
 // ============================================================================
 
 gameLoopSurvival:
+    thread logInfo "Survival mode game loop started"
     println "[28FL] Survival mode initialized"
     wait 10
 
@@ -778,6 +981,7 @@ gameLoopSurvival:
                 $player[local.i] != level.survivor &&
                 $player[local.i].dmteam == allies &&
                 $player[local.i].inGame) {
+                thread logDebug "Enforcing team: converting " + $player[local.i].netname + " to infected"
                 $player[local.i] thread convertToInfected $player[local.i]
             }
 
@@ -816,6 +1020,7 @@ runSurvivalRound:
     local.previousSurvivor = level.survivor
 
     // Select new survivor
+    thread logDebug "Selecting new survivor (previous: " + local.previousSurvivor + ")"
     local.survivor = thread selectFairestPlayer local.previousSurvivor
 
     if (local.survivor == NIL || local.survivor == NULL) {
@@ -836,6 +1041,8 @@ runSurvivalRound:
     level.lastProximityTime = level.time  // Initialize proximity tracking for new round
 
     // Setup survivor
+    thread logInfo ">>> NEW SURVIVAL ROUND STARTED <<<"
+    thread logInfo "Selected survivor: " + local.survivor.netname
     println "[28FL] Selected survivor: " + local.survivor.netname
     thread spawnAsSurvivor local.survivor
 
@@ -855,6 +1062,7 @@ runSurvivalRound:
     
     local.minutes = int(local.dynamicTime / 60)
     local.seconds = int(local.dynamicTime - (local.minutes * 60))
+    thread logInfo "Survival time: " + local.minutes + "m " + local.seconds + "s (with " + local.infectedCount + " infected)"
     iprintlnbold_noloc "Survival time: " + local.minutes + "m " + local.seconds + "s (" + local.infectedCount + " infected)"
 
     // Set expiry time
@@ -904,13 +1112,16 @@ runSurvivalRound:
     }
 
     // Round ended
+    thread logInfo ">>> SURVIVAL ROUND ENDED <<<"
     println "[28FL] Survivor round ended"
 
     // Display result
     if (local.timeLimitHit) {
+        thread logInfo "Result: " + local.survivor.netname + " SURVIVED! (time expired)"
         iprintlnbold_noloc local.survivor.netname + " SURVIVED! Winner!"
         local.survivor iprint "You won! You survived the infection!"
     } else {
+        thread logInfo "Result: " + local.survivor.netname + " was killed by infected"
         iprintlnbold_noloc "The Survivor has been infected!"
     }
 
@@ -944,6 +1155,7 @@ end
 // ============================================================================
 
 gameLoopOutbreak:
+    thread logInfo "Outbreak mode game loop started"
     println "[28FL] Outbreak mode initialized"
     println "[28FL] Multiple survivors, infection spreads on kill"
 
@@ -966,6 +1178,7 @@ gameLoopOutbreak:
         // Need enough players
         if (local.playerCount < 4) {
             iprintlnbold_noloc "Need at least 4 players for Outbreak mode"
+            thread logDebug "Waiting for players (need 4, have " + local.playerCount + ")"
             wait 5
             waitframe
             continue
@@ -987,6 +1200,8 @@ gameLoopOutbreak:
 end
 
 selectOutbreakSurvivors:
+    thread logInfo ">>> NEW OUTBREAK ROUND STARTED <<<"
+    thread logInfo "Selecting " + level.survivorCount + " survivors for Outbreak"
     println "[28FL] Selecting " + level.survivorCount + " survivors for Outbreak"
 
     level.outbreakSurvivors = []
@@ -1002,6 +1217,7 @@ selectOutbreakSurvivors:
 
             level.outbreakSurvivors[local.selected] = local.candidate
             thread spawnAsSurvivor local.candidate
+            thread logInfo "Selected survivor " + (local.selected + 1) + ": " + local.candidate.netname
             local.candidate iprint "You are a survivor! Work together!"
 
             local.selected++
@@ -1019,6 +1235,7 @@ end
 // ============================================================================
 
 gameLoopInfection:
+    thread logInfo "Infection mode game loop started"
     println "[28FL] Infection mode initialized"
     println "[28FL] First infected must infect all survivors"
 
@@ -1081,6 +1298,8 @@ gameLoopInfection:
 end
 
 selectPatientZero:
+    thread logInfo ">>> NEW INFECTION ROUND STARTED <<<"
+    thread logInfo "Selecting Patient Zero"
     println "[28FL] Selecting Patient Zero"
 
     local.infected = thread selectFairestPlayer NIL
@@ -1091,6 +1310,7 @@ selectPatientZero:
 
     level.patientZero = local.infected
     local.infected.infectionAmount++
+    thread logInfo "Patient Zero: " + local.infected.netname
 
     // Make everyone survivors except patient zero - all get pistols
     for (local.i = 1; local.i <= $player.size; local.i++) {
@@ -1126,6 +1346,8 @@ monitorInfection:
 
         // Check win conditions
         if (local.survivorCount == 0 && local.infectedCount > 0) {
+            thread logInfo ">>> INFECTION ROUND ENDED <<<"
+            thread logInfo "Result: All survivors infected"
             iprintlnbold_noloc "All survivors have been infected!"
             level.patientZero = NIL
             level.infectionActive = 0
