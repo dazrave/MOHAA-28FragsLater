@@ -25,11 +25,16 @@ local.SCRIPT_VERSION = "1.0.0"
 local.REQUIRED_GAMETYPE = 2      // Team Deathmatch
 
 // Gameplay constants
-local.SURVIVOR_TIME_LIMIT = 200  // Seconds survivor has to survive
+local.SURVIVOR_TIME_LIMIT = 200  // Seconds survivor has to survive (LEGACY - not used with dynamic timing)
 local.MIN_PLAYERS = 2            // Minimum players to start game
 local.PROXIMITY_DISTANCE = 500   // Distance for proximity alerts
 local.TIMER_WARNING_YELLOW = 30  // Yellow warning at 30 seconds
 local.TIMER_WARNING_RED = 10     // Red warning at 10 seconds
+
+// Dynamic Survival Time (Option 3 Scoring System)
+local.DEFAULT_SURVIVAL_TIME = 300     // Default 5 minutes
+local.TIME_REDUCTION_PERCENT = 5      // 5% reduction per infected player
+local.MIN_SURVIVAL_TIME = 60          // Minimum 1 minute
 
 // Team constants
 local.TEAM_INFECTED = "axis"
@@ -92,12 +97,12 @@ main:
     // Initialize level variables
     level.scriptVersion = local.SCRIPT_VERSION
     level.gameMode = local.gameMode
-    level.survivorTimelimit = local.SURVIVOR_TIME_LIMIT
+    level.survivorTimelimit = local.DEFAULT_SURVIVAL_TIME
     level.proximityTrigger = 0
     level.selectingSurvivor = 0
     level.survivor = NIL
 
-    println "[28FL] Time limit: " + level.survivorTimelimit + " seconds"
+    println "[28FL] Default survival time: " + level.survivorTimelimit + " seconds"
 
     // Set game type display name
     setcvar "g_gametypestring" "28 Frags Later"
@@ -480,6 +485,31 @@ checkProximity local.survivor:
     }
 end
 
+calculateSurvivalTime:
+    // Count infected players
+    local.infectedCount = 0
+    
+    for (local.i = 1; local.i <= $player.size; local.i++) {
+        if ($player[local.i].inGame && 
+            $player[local.i].dmteam == axis &&
+            $player[local.i].dmteam != spectator) {
+            local.infectedCount++
+        }
+    }
+    
+    // Calculate time with 5% reduction per infected player
+    // Formula: baseTime * (1 - (infectedCount * reductionPercent / 100))
+    local.reductionFactor = local.infectedCount * local.TIME_REDUCTION_PERCENT
+    local.survivalTime = local.DEFAULT_SURVIVAL_TIME * (100 - local.reductionFactor) / 100
+    
+    // Enforce minimum time of 1 minute
+    if (local.survivalTime < local.MIN_SURVIVAL_TIME) {
+        local.survivalTime = local.MIN_SURVIVAL_TIME
+    }
+    
+    return local.survivalTime
+end
+
 
 // ============================================================================
 // SURVIVAL MODE (Mode 3)
@@ -564,6 +594,24 @@ runSurvivalRound:
     println "[28FL] Selected survivor: " + local.survivor.netname
     thread spawnAsSurvivor local.survivor
 
+    // Calculate dynamic survival time based on infected player count
+    local.dynamicTime = thread calculateSurvivalTime
+    level.survivorTimelimit = local.dynamicTime
+    
+    // Display time adjustment to all players
+    local.infectedCount = 0
+    for (local.i = 1; local.i <= $player.size; local.i++) {
+        if ($player[local.i].inGame && 
+            $player[local.i].dmteam == axis &&
+            $player[local.i].dmteam != spectator) {
+            local.infectedCount++
+        }
+    }
+    
+    local.minutes = int(local.dynamicTime / 60)
+    local.seconds = int(local.dynamicTime - (local.minutes * 60))
+    iprintlnbold_noloc "Survival time: " + local.minutes + "m " + local.seconds + "s (" + local.infectedCount + " infected)"
+
     // Set expiry time
     local.survivor.survivorExpiry = level.time + level.survivorTimelimit
 
@@ -615,7 +663,8 @@ runSurvivalRound:
 
     // Display result
     if (local.timeLimitHit) {
-        iprintlnbold_noloc "Time limit reached!"
+        iprintlnbold_noloc local.survivor.netname + " SURVIVED! Winner!"
+        local.survivor iprint "You won! You survived the infection!"
     } else {
         iprintlnbold_noloc "The Survivor has been infected!"
     }
