@@ -26,6 +26,7 @@ local.REQUIRED_GAMETYPE = 2      // Team Deathmatch
 
 // Gameplay constants
 local.SURVIVOR_TIME_LIMIT = 200  // Seconds survivor has to survive (LEGACY - not used with dynamic timing)
+local.INFECTION_TIME_LIMIT = 300 // 5 minutes for infection mode
 local.MIN_PLAYERS = 2            // Minimum players to start game
 local.PROXIMITY_DISTANCE = 500   // Distance for proximity alerts
 local.TIMER_WARNING_YELLOW = 30  // Yellow warning at 30 seconds
@@ -297,6 +298,67 @@ hideTimer:
     huddraw_alpha local.HUD_TIMER_ID 0
 end
 
+displayInfectionTimer:
+    // Display countdown timer for infection mode
+    local.lastMin = -1
+    local.lastSec = -1
+    
+    while (level.infectionActive && level.infectionRoundStarted) {
+        local.timeLeft = level.infectionRoundExpiry - level.time
+        
+        // Check if time expired
+        if (local.timeLeft <= 0) {
+            // Time's up - survivors win
+            iprintlnbold_noloc "Time expired! Survivors win!"
+            level.patientZero = NIL
+            level.infectionActive = 0
+            level.infectionRoundStarted = 0
+            thread hideTimer
+            wait 10
+            level.infectionActive = 1
+            break
+        }
+        
+        local.min = int(local.timeLeft / 60)
+        local.sec = int(local.timeLeft - (local.min * 60))
+        
+        // Only update display if time changed
+        if (local.sec != local.lastSec || local.min != local.lastMin) {
+            // Format time string
+            local.timeStr = local.min + ":"
+            if (local.sec < 10) {
+                local.timeStr = local.timeStr + "0"
+            }
+            local.timeStr = local.timeStr + local.sec
+            
+            // Configure HUD element
+            huddraw_alpha local.HUD_TIMER_ID 1
+            huddraw_rect local.HUD_TIMER_ID local.HUD_TIMER_X local.HUD_TIMER_Y 640 480
+            huddraw_virtualsize local.HUD_TIMER_ID 1
+            huddraw_font local.HUD_TIMER_ID courier-20
+            huddraw_string local.HUD_TIMER_ID local.timeStr
+            
+            // Color based on time remaining
+            if (local.min == 0) {
+                if (local.sec <= local.TIMER_WARNING_RED) {
+                    huddraw_color local.HUD_TIMER_ID 1 0 0  // Red
+                } else if (local.sec <= local.TIMER_WARNING_YELLOW) {
+                    huddraw_color local.HUD_TIMER_ID 1 1 0  // Yellow
+                } else {
+                    huddraw_color local.HUD_TIMER_ID 1 1 1  // White
+                }
+            } else {
+                huddraw_color local.HUD_TIMER_ID 1 1 1  // White
+            }
+            
+            local.lastMin = local.min
+            local.lastSec = local.sec
+        }
+        
+        wait 0.5
+    }
+end
+
 
 // ============================================================================
 // PLAYER MANAGEMENT
@@ -338,8 +400,15 @@ onPlayerSpawn:
 
         local.player.inGame = 1
 
-        // Spawn as infected by default
-        thread spawnAsInfected local.player
+        // Handle infection mode late joiners
+        if (level.gameMode == 2 && level.infectionActive && level.infectionRoundStarted) {
+            // Late joiners become infected
+            thread spawnAsInfected local.player
+            local.player iprint "Round in progress - you are infected!"
+        } else {
+            // Spawn as infected by default
+            thread spawnAsInfected local.player
+        }
     }
 end
 
@@ -373,6 +442,25 @@ spawnAsSurvivor local.player:
     wait 5
 
     local.player iprint "You are the last Survivor!"
+    fadein 0 0 0 0 1
+end
+
+spawnAsSurvivorWithPistol local.player:
+    // Used in infection mode - survivors get pistols
+    fadein 10 0 0 0 1
+    waitframe
+
+    local.player join_team allies
+    local.player respawn
+    local.player model local.MODEL_SURVIVOR
+
+    waitframe
+
+    local.player takeall
+    local.player item local.WEAPON_INFECTED
+    local.player useweaponclass pistol
+    local.player weaponcommand notdroppable
+
     fadein 0 0 0 0 1
 end
 
@@ -772,6 +860,7 @@ gameLoopInfection:
     println "[28FL] First infected must infect all survivors"
 
     level.infectionActive = 1
+    level.infectionRoundStarted = 0
 
     wait 10
 
@@ -781,6 +870,11 @@ gameLoopInfection:
             if (!$player[local.i].isDone) {
                 $player[local.i].isDone = 1
                 $player[local.i] thread playerThinker
+            }
+            
+            // Initialize infection marker
+            if ($player[local.i].needsInfection == NIL) {
+                $player[local.i].needsInfection = 0
             }
         }
 
@@ -795,6 +889,19 @@ gameLoopInfection:
         // Select patient zero if needed
         if (level.patientZero == NIL) {
             thread selectPatientZero
+            
+            // Start round with timer
+            level.infectionRoundStarted = 1
+            level.infectionRoundExpiry = level.time + local.INFECTION_TIME_LIMIT
+            
+            // Display round start message
+            iprintlnbold_noloc "Infection round started! 5 minutes to survive!"
+            
+            // Start death monitoring
+            thread monitorInfectionDeaths
+            
+            // Start timer display
+            thread displayInfectionTimer
         }
 
         // Monitor infection spread
@@ -816,14 +923,14 @@ selectPatientZero:
     level.patientZero = local.infected
     local.infected.infectionAmount++
 
-    // Make everyone survivors except patient zero
+    // Make everyone survivors except patient zero - all get pistols
     for (local.i = 1; local.i <= $player.size; local.i++) {
         if ($player[local.i].inGame && $player[local.i].dmteam != spectator) {
             if ($player[local.i] == local.infected) {
                 thread spawnAsInfected $player[local.i]
                 $player[local.i] iprint "You are Patient Zero! Infect everyone!"
             } else {
-                thread spawnAsSurvivor $player[local.i]
+                thread spawnAsSurvivorWithPistol $player[local.i]
                 $player[local.i] iprint "You are a survivor! Avoid infection!"
             }
         }
@@ -853,12 +960,44 @@ monitorInfection:
             iprintlnbold_noloc "All survivors have been infected!"
             level.patientZero = NIL
             level.infectionActive = 0
+            level.infectionRoundStarted = 0
             wait 10
             level.infectionActive = 1
             break
         }
 
         wait 1
+    }
+end
+
+monitorInfectionDeaths:
+    // Monitor for survivor deaths and convert them to infected
+    while (level.infectionActive && level.infectionRoundStarted) {
+        for (local.i = 1; local.i <= $player.size; local.i++) {
+            // Check if survivor died and needs conversion
+            if ($player[local.i].inGame && 
+                !isAlive($player[local.i]) && 
+                $player[local.i].dmteam == allies &&
+                $player[local.i] != level.patientZero) {
+                
+                // Mark player for conversion on next spawn
+                $player[local.i].needsInfection = 1
+            }
+            
+            // Convert respawned survivors to infected
+            if ($player[local.i].inGame && 
+                isAlive($player[local.i]) &&
+                $player[local.i].dmteam == allies &&
+                $player[local.i].needsInfection == 1 &&
+                $player[local.i] != level.patientZero) {
+                
+                $player[local.i].needsInfection = 0
+                thread convertToInfected $player[local.i]
+                $player[local.i] iprint "You have been infected!"
+            }
+        }
+        
+        waitframe
     }
 end
 
