@@ -80,6 +80,35 @@ Originally created 2004-2006 by Ophis (with help from Falco)
 - **Weapons:** Shotgun for survivors, Colt 45 for infected
 - **Sounds:** Ambient thunder effects
 
+## Server Administration
+
+### Enhanced Logging & Monitoring
+
+The mod includes a comprehensive logging system for server administrators:
+
+- **Configurable Log Levels** - Control detail from errors-only to verbose
+- **Server Console Output** - Real-time monitoring of game events
+- **Log File Integration** - Automatic logging to MOHAA game logs
+- **Event Tracking** - Player joins/spawns, round start/end, survivor selection, etc.
+
+**Quick Start:**
+```
+set 28FL_LogLevel 2  // 0=Off, 1=Error, 2=Info (default), 3=Debug, 4=Verbose
+```
+
+### RCON Commands
+
+Server admins can control the game remotely via RCON:
+
+```
+rcon set 28FL_Command "status"       // Display server status
+rcon set 28FL_Command "listplayers"  // List all players and teams
+rcon set 28FL_Command "restart"      // Restart current game mode
+rcon set 28FL_Command "nextround"    // Force next round
+```
+
+**See [SERVER_ADMINISTRATION.md](SERVER_ADMINISTRATION.md) for complete documentation.**
+
 ## Configuration
 
 All gameplay settings can be easily adjusted at the top of `global/28fragslater.scr`:
