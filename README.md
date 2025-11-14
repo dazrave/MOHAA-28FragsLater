@@ -36,9 +36,12 @@ Originally created 2004-2006 by Ophis (with help from Falco)
 **Classic infection - one infected spreads the plague**
 
 - One "Patient Zero" selected as first infected
-- All other players start as survivors
-- When a survivor is killed, they become infected
-- Round ends when all survivors are infected
+- All players start with pistols (infected and survivors)
+- Survivors must survive for 5 minutes to win
+- When a survivor is killed, they become infected on respawn
+- Late joiners automatically become infected
+- Round ends when all survivors are infected OR time expires
+- Survivors win if any survive the 5-minute timer
 - Infection spreads exponentially
 
 ## Installation
