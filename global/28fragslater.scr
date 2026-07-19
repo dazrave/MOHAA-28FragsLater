@@ -1,1176 +1,639 @@
-// ============================================================================
-// 28 Frags Later Mod - REFACTORED VERSION
-// ============================================================================
-// Original Author: Ophis
-// Refactored: 2025
-// Contact: ophis@daphi.co.uk
-// Special thanks: Falco
-//
-// A zombie/infection survival mod for Medal of Honor: Allied Assault
-// Transforms Team Deathmatch into an asymmetric horror experience
-// ============================================================================
-
-// ============================================================================
-// CONFIGURATION & CONSTANTS
-// ============================================================================
-
-// Game mode constants
-local.GAMEMODE_OFF = 0
-local.GAMEMODE_OUTBREAK = 1      // Multiple survivors, infection spreads
-local.GAMEMODE_INFECTION = 2     // Classic infection - one infected infects others
-local.GAMEMODE_SURVIVAL = 3      // One survivor vs all infected
-
-// Script configuration
-local.SCRIPT_VERSION = "1.0.0"
-local.REQUIRED_GAMETYPE = 2      // Team Deathmatch
-
-// Gameplay constants
-local.SURVIVOR_TIME_LIMIT = 200  // Seconds survivor has to survive (LEGACY - not used with dynamic timing)
-local.INFECTION_TIME_LIMIT = 300 // 5 minutes for infection mode
-local.MIN_PLAYERS = 2            // Minimum players to start game
-local.PROXIMITY_DISTANCE = 500   // Distance for proximity alerts (LEGACY - kept for compatibility)
-local.TIMER_WARNING_YELLOW = 30  // Yellow warning at 30 seconds
-local.TIMER_WARNING_RED = 10     // Red warning at 10 seconds
-
-// Proximity message system (prevents camping)
-local.PROXIMITY_TIMEOUT = 60     // Seconds before showing proximity hints (1 minute)
-local.PROXIMITY_HOT = 10         // Distance in meters for "hot" indicator
-local.PROXIMITY_WARM = 25        // Distance in meters for "warm" indicator
-local.PROXIMITY_COLD = 50        // Distance in meters for "cold" indicator
-local.PROXIMITY_NONE = 100       // Distance in meters - show nothing beyond this
-
-// Dynamic Survival Time (Option 3 Scoring System)
-local.DEFAULT_SURVIVAL_TIME = 300     // Default 5 minutes
-local.TIME_REDUCTION_PERCENT = 5      // 5% reduction per infected player
-local.MIN_SURVIVAL_TIME = 60          // Minimum 1 minute
-
-// Team constants
-local.TEAM_INFECTED = "axis"
-local.TEAM_SURVIVOR = "allies"
-
-// Model paths
-local.MODEL_INFECTED = "models/player/german_[Kapo]_Prisioner_1.tik"
-local.MODEL_SURVIVOR = "models/player/allied_Magna_Cartas_police.tik"
-
-// Weapon paths
-local.WEAPON_INFECTED = "models/weapons/colt45.tik"
-local.WEAPON_SURVIVOR = "models/weapons/shotgun.tik"
-
-// HUD constants
-local.HUD_TIMER_ID = 107
-local.HUD_TIMER_X = 500
-local.HUD_TIMER_Y = 35
-
-// Visual effects
-local.FARPLANE_DISTANCE = 1600
-local.FARPLANE_COLOR_NORMAL = "0 0 0"
-local.FARPLANE_COLOR_LIGHTNING = "0.9 0.9 0.9"
-
-// Update intervals (in seconds)
-local.UPDATE_FASTSKY = 10
-local.UPDATE_STORM_MIN = 30
-local.UPDATE_STORM_VAR = 15
-
-// Survivor selection constants
-local.MAX_SURVIVOR_COUNT = 524288  // Maximum times someone can be survivor
-
-
-// ============================================================================
-// MAIN ENTRY POINT
-// ============================================================================
+// 28 Frags Later - OpenMOHAA (native Windows build)
+// Three game modes (Survival / Outbreak / Infection), map+mode rotation,
+// bot horde (melee, sprinting, herding), session survivor leaderboard.
+// By DazRave (orig Ophis). Re-created from github.com/dazrave/MOHAA-28FragsLater
 
 main:
-    // Validate game mode
-    if (int(getcvar(28FragsLater)) == local.GAMEMODE_OFF) {
+    if (level.28fl_running)
         end
-    }
-
-    local.gameMode = int(getcvar(28FragsLater))
-    println "[28FL] Starting 28 Frags Later Mod v" + local.SCRIPT_VERSION
-    println "[28FL] Game Mode: " + local.gameMode
-
-    // Prevent duplicate script execution
-    if (level.isRunning) {
-        println "[28FL] ERROR: Script already running. Terminating."
+    level.28fl_running = 1
+    if (int(getcvar("g_gametype")) != 2)
         end
-    }
-    level.isRunning = 1
 
-    // Validate Team Deathmatch is active
-    if (int(getcvar(g_gametype)) != local.REQUIRED_GAMETYPE) {
-        println "[28FL] ERROR: Requires Team Deathmatch (g_gametype 2). Terminating."
-        end
-    }
-
-    // Initialize level variables
-    level.scriptVersion = local.SCRIPT_VERSION
-    level.gameMode = local.gameMode
-    level.survivorTimelimit = local.DEFAULT_SURVIVAL_TIME
-    level.proximityTrigger = 0
-    level.selectingSurvivor = 0
-    level.survivor = NIL
-    level.lastProximityTime = 0  // Track when players were last in proximity
-
-    println "[28FL] Default survival time: " + level.survivorTimelimit + " seconds"
-
-    // Set game type display name
-    setcvar "g_gametypestring" "28 Frags Later"
-
-    // Wait for game initialization
-    level waittill prespawn
-    println "[28FL] Prespawn phase started"
-
-    // Spawn script master
+    // ---- sounds (atmosphere) ----
     local.master = spawn ScriptMaster
+    local.master aliascache thunder1 sound/amb/Amb_Thunder_01.wav soundparms 1.0 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj train "
+    local.master aliascache thunder2 sound/amb/Amb_Thunder_02.wav soundparms 1.0 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj train "
+    local.master aliascache creak1 sound/characters/fs_metalcreak_01.wav soundparms 0.6 0.4 0.7 0.6 160 1600 auto loaded maps "m dm obj train "
+    local.master aliascache creak2 sound/characters/fs_woodcreak_01.wav soundparms 0.6 0.4 0.7 0.6 160 1600 auto loaded maps "m dm obj train "
+    local.master aliascache snap1 sound/amb/Amb_BranchBreaking01.wav soundparms 1.0 0.0 1.0 0.0 500 3000 auto loaded maps "m dm obj train "
+    local.master aliascache snap2 sound/amb/Amb_BranchBreaking02.wav soundparms 1.0 0.0 1.0 0.0 500 3000 auto loaded maps "m dm obj train "
 
     level waittill spawn
-    println "[28FL] Spawn phase started"
 
-    // Initialize visual effects
-    thread initVisualEffects
+    // ---- choose the mode from the rotation index (or a fixed override) ----
+    local.rot = int(getcvar("g_28fl_rot"))
+    local.fixed = int(getcvar("g_28fl_mode"))
+    local.modeList[1] = 3    // Survival
+    local.modeList[2] = 1    // Outbreak
+    local.modeList[3] = 2    // Infection
+    if (local.fixed > 0)
+        level.gameMode = local.fixed
+    else
+        level.gameMode = local.modeList[(local.rot % 3) + 1]
 
-    // Set TAB menu information
-    thread setObjectiveText
+    // Infected are always a melee horde (survivors carry the guns)
+    setcvar "g_infected_disarm" "1"
 
-    // Start game mode
-    switch (level.gameMode) {
-        case local.GAMEMODE_OUTBREAK:
-            println "[28FL] Starting Outbreak Mode"
-            thread gameLoopOutbreak
-            break
-        case local.GAMEMODE_INFECTION:
-            println "[28FL] Starting Infection Mode"
-            thread gameLoopInfection
-            break
-        case local.GAMEMODE_SURVIVAL:
-            println "[28FL] Starting Survival Mode"
-            thread gameLoopSurvival
-            break
-        default:
-            println "[28FL] ERROR: Invalid game mode: " + level.gameMode
-            end
-    }
-end
-
-
-// ============================================================================
-// VISUAL EFFECTS
-// ============================================================================
-
-initVisualEffects:
-    println "[28FL] Initializing visual effects"
-
-    // Set fog/farplane settings for atmosphere
-    $world farplane local.FARPLANE_DISTANCE
-    $world farplane_color ( 0 0 0 )
+    // ---- atmosphere ----
+    $world farplane 4000
+    $world farplane_color ( 0.12 0.12 0.14 )
     $world farplane_cull 1
+    level.28fl_survtime = 0
+    level.28fl_survalive = 0
+    level.28fl_survname = "---"
 
-    // Start atmospheric effects
-    thread forceFastSky
-    thread createStorm
+    thread set_mode_text
+    thread storm
+    thread creepy_sounds
+    thread dynamic_music
+    thread score_hud
+    thread bot_enforcer
+    thread winner_tally
+    thread player_manager
+    thread telemetry
+    thread rotation_timer
+
+    // ---- start the active mode ----
+    if (level.gameMode == 3)
+        thread mode_survival
+    else if (level.gameMode == 1)
+        thread mode_outbreak
+    else if (level.gameMode == 2)
+        thread mode_infection
 end
 
-forceFastSky:
-    println "[28FL] Force fast sky rendering enabled"
-    wait 2
-
-    while (1) {
-        $player stufftext "r_fastsky 1"
-        wait local.UPDATE_FASTSKY
+// =====================================================================
+//  Rules shown on the TAB / objectives screen + scoreboard title
+// =====================================================================
+set_mode_text:
+    if (level.gameMode == 3)
+    {
+        level.28fl_modeName = "SURVIVAL"
+        setcvar "g_gametypestring" "28FL: SURVIVAL"
+        setcvar "g_obj_alliedtext1" "SURVIVAL  -  one Survivor vs the horde"
+        setcvar "g_obj_alliedtext2" "Survivor has a SHOTGUN. Outlast the timer to win."
+        setcvar "g_obj_alliedtext3" "Infected are melee-only. Kill the Survivor to end it."
     }
+    else if (level.gameMode == 1)
+    {
+        level.28fl_modeName = "OUTBREAK"
+        setcvar "g_gametypestring" "28FL: OUTBREAK"
+        setcvar "g_obj_alliedtext1" "OUTBREAK  -  up to 3 Survivors, co-op"
+        setcvar "g_obj_alliedtext2" "Survivors have SHOTGUNS. Stay alive together."
+        setcvar "g_obj_alliedtext3" "Die and you JOIN the infected. Last team standing wins."
+    }
+    else
+    {
+        level.28fl_modeName = "INFECTION"
+        setcvar "g_gametypestring" "28FL: INFECTION"
+        setcvar "g_obj_alliedtext1" "INFECTION  -  everyone starts a Survivor"
+        setcvar "g_obj_alliedtext2" "Survivors have PISTOLS. Survive 5 minutes to win."
+        setcvar "g_obj_alliedtext3" "Get killed and you TURN. Don't let everyone fall."
+    }
+    setcvar "g_obj_axistext1" "28 Frags Later"
+    setcvar "g_obj_axistext2" "map + mode rotate every 10 minutes"
+    setcvar "g_obj_axistext3" "by DazRave"
 end
 
-createStorm:
-    println "[28FL] Storm effects started"
-
-    while (1) {
-        wait (local.UPDATE_STORM_MIN + randomint(local.UPDATE_STORM_VAR))
-
-        local.pattern = randomint(3) + 1
-
-        switch (local.pattern) {
-            case 1:
-                // Triple flash pattern
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.2
-                $world farplane_color ( 0 0 0 )
-                wait 1
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.1
-                $world farplane_color ( 0 0 0 )
-                wait 0.1
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.1
-                $world farplane_color ( 0 0 0 )
-                wait (1 + randomfloat(2))
-                $world playsound thunder
-                break
-
-            case 2:
-                // Double flash with delayed thunder
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.1
-                $world farplane_color ( 0 0 0 )
-                wait 0.1
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.1
-                $world farplane_color ( 0 0 0 )
-                $world playsound thunder
-                wait 1
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.2
-                $world farplane_color ( 0 0 0 )
-                wait (1 + randomfloat(2))
-                break
-
-            case 3:
-                // Quick burst pattern
-                $world farplane_color ( 0.9 0.9 0.9 )
-                $world playsound thunder
-                wait 0.1
-                $world farplane_color ( 0 0 0 )
-                wait 0.1
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.2
-                $world farplane_color ( 0 0 0 )
-                wait 0.5
-                $world farplane_color ( 0.9 0.9 0.9 )
-                wait 0.1
-                $world farplane_color ( 0 0 0 )
-                wait (1 + randomfloat(2))
-                break
-        }
-    }
-end
-
-
-// ============================================================================
-// UI & DISPLAY
-// ============================================================================
-
-setObjectiveText:
-    setcvar "g_obj_alliedtext1" "[28 Frags Later]"
-
-    switch (level.gameMode) {
-        case 1:
-            setcvar "g_obj_alliedtext2" "Outbreak Mode"
-            break
-        case 2:
-            setcvar "g_obj_alliedtext2" "Infection Mode"
-            break
-        case 3:
-            setcvar "g_obj_alliedtext2" "Survival Mode"
-            break
-    }
-
-    setcvar "g_obj_alliedtext3" ""
-    setcvar "g_obj_axistext1" ""
-    setcvar "g_obj_axistext2" ""
-    setcvar "g_obj_axistext3" "www.28fragslater.co.uk"
-end
-
-displayTimer local.survivor local.timeLeft:
-    // Calculate minutes and seconds
-    local.min = int(local.timeLeft / 60)
-    local.sec = int(local.timeLeft - (local.min * 60))
-
-    // Format time string
-    local.timeStr = local.min + ":"
-    if (local.sec < 10) {
-        local.timeStr = local.timeStr + "0"
-    }
-    local.timeStr = local.timeStr + local.sec
-
-    // Configure HUD element
-    huddraw_alpha local.HUD_TIMER_ID 1
-    huddraw_rect local.HUD_TIMER_ID local.HUD_TIMER_X local.HUD_TIMER_Y 640 480
-    huddraw_virtualsize local.HUD_TIMER_ID 1
-    huddraw_font local.HUD_TIMER_ID courier-20
-    huddraw_string local.HUD_TIMER_ID local.timeStr
-
-    // Color based on time remaining
-    if (local.min == 0) {
-        if (local.sec <= local.TIMER_WARNING_RED) {
-            huddraw_color local.HUD_TIMER_ID 1 0 0  // Red
-        } else if (local.sec <= local.TIMER_WARNING_YELLOW) {
-            huddraw_color local.HUD_TIMER_ID 1 1 0  // Yellow
-        } else {
-            huddraw_color local.HUD_TIMER_ID 1 1 1  // White
-        }
-    } else {
-        huddraw_color local.HUD_TIMER_ID 1 1 1  // White
-    }
-end
-
-hideTimer:
-    huddraw_alpha local.HUD_TIMER_ID 0
-end
-
-displayInfectionTimer:
-    // Display countdown timer for infection mode
-    local.lastMin = -1
-    local.lastSec = -1
-    
-    while (level.infectionActive && level.infectionRoundStarted) {
-        local.timeLeft = level.infectionRoundExpiry - level.time
-        
-        // Check if time expired
-        if (local.timeLeft <= 0) {
-            // Time's up - survivors win
-            iprintlnbold_noloc "Time expired! Survivors win!"
-            level.patientZero = NIL
-            level.infectionActive = 0
-            level.infectionRoundStarted = 0
-            thread hideTimer
-            wait 10
-            level.infectionActive = 1
-            break
-        }
-        
-        local.min = int(local.timeLeft / 60)
-        local.sec = int(local.timeLeft - (local.min * 60))
-        
-        // Only update display if time changed
-        if (local.sec != local.lastSec || local.min != local.lastMin) {
-            // Format time string
-            local.timeStr = local.min + ":"
-            if (local.sec < 10) {
-                local.timeStr = local.timeStr + "0"
-            }
-            local.timeStr = local.timeStr + local.sec
-            
-            // Configure HUD element
-            huddraw_alpha local.HUD_TIMER_ID 1
-            huddraw_rect local.HUD_TIMER_ID local.HUD_TIMER_X local.HUD_TIMER_Y 640 480
-            huddraw_virtualsize local.HUD_TIMER_ID 1
-            huddraw_font local.HUD_TIMER_ID courier-20
-            huddraw_string local.HUD_TIMER_ID local.timeStr
-            
-            // Color based on time remaining
-            if (local.min == 0) {
-                if (local.sec <= local.TIMER_WARNING_RED) {
-                    huddraw_color local.HUD_TIMER_ID 1 0 0  // Red
-                } else if (local.sec <= local.TIMER_WARNING_YELLOW) {
-                    huddraw_color local.HUD_TIMER_ID 1 1 0  // Yellow
-                } else {
-                    huddraw_color local.HUD_TIMER_ID 1 1 1  // White
-                }
-            } else {
-                huddraw_color local.HUD_TIMER_ID 1 1 1  // White
-            }
-            
-            local.lastMin = local.min
-            local.lastSec = local.sec
-        }
-        
-        wait 0.5
-    }
-end
-
-
-// ============================================================================
-// PLAYER MANAGEMENT
-// ============================================================================
-
-playerThinker:
-    // Initialize player state
-    self.inGame = 0
-
-    if (self.survivalAmount == NIL) {
-        self.survivalAmount = 0
-    }
-
-    if (self.infectionAmount == NIL) {
-        self.infectionAmount = 0
-    }
-
-    // Create spawn trigger for this player
-    local.spawnTrigger = spawn trigger_multiple origin self.origin
-    local.spawnTrigger glue self
-    local.spawnTrigger.player = self
-    local.spawnTrigger setthread global/28fragslater.scr::onPlayerSpawn
-
-    // Keep trigger alive while player exists
-    while (self && local.spawnTrigger) {
-        waitframe
-    }
-
-    // Cleanup
-    if (local.spawnTrigger) {
-        local.spawnTrigger delete
-    }
-end
-
-onPlayerSpawn:
-    if (parm.other == self.player) {
-        local.player = self.player
-        self delete
-
-        local.player.inGame = 1
-
-        // Handle infection mode late joiners
-        if (level.gameMode == 2 && level.infectionActive && level.infectionRoundStarted) {
-            // Late joiners become infected
-            thread spawnAsInfected local.player
-            local.player iprint "Round in progress - you are infected!"
-        } else {
-            // Spawn as infected by default
-            thread spawnAsInfected local.player
-        }
-    }
-end
-
-spawnAsInfected local.player:
-    local.player join_team axis
-    local.player respawn
-    local.player model local.MODEL_INFECTED
-
-    waitframe
-
-    local.player takeall
-    local.player item local.WEAPON_INFECTED
-    local.player useweaponclass pistol
-    $player weaponcommand notdroppable
-end
-
-spawnAsSurvivor local.player:
-    fadein 10 0 0 0 1
-    waitframe
-
-    local.player join_team allies
-    local.player respawn
-    local.player model local.MODEL_SURVIVOR
-
-    waitframe
-
-    local.player takeall
-    local.player give local.WEAPON_SURVIVOR
-    local.player useweaponclass heavy
-
+// =====================================================================
+//  Map + mode rotation (every 10 minutes)
+// =====================================================================
+rotation_timer:
+    wait 600
+    thread announce_winner
     wait 5
-
-    local.player iprint "You are the last Survivor!"
-    fadein 0 0 0 0 1
+    local.maps[1] = "dm/lowdownmall2"
+    local.maps[2] = "dm/the_alley"
+    local.maps[3] = "dm/megapole"
+    local.maps[4] = "dm/snowhill"
+    local.maps[5] = "dm/STB01_dm_underground"
+    local.maps[6] = "dm/tpm_final"
+    local.next = int(getcvar("g_28fl_rot")) + 1
+    setcvar "g_28fl_rot" string(local.next)
+    local.mi = (local.next % 6) + 1
+    map (local.maps[local.mi])
 end
 
-spawnAsSurvivorWithPistol local.player:
-    // Used in infection mode - survivors get pistols
-    fadein 10 0 0 0 1
-    waitframe
-
-    local.player join_team allies
-    local.player respawn
-    local.player model local.MODEL_SURVIVOR
-
-    waitframe
-
-    local.player takeall
-    local.player item local.WEAPON_INFECTED
-    local.player useweaponclass pistol
-    local.player weaponcommand notdroppable
-
-    fadein 0 0 0 0 1
-end
-
-convertToInfected local.player:
-    local.player spectator
-    waitframe
-    local.player join_team axis
-    wait 5
-    local.player respawn
-
-    waitframe
-
-    local.player takeall
-    local.player item local.WEAPON_INFECTED
-    local.player useweaponclass pistol
-    local.player weaponcommand notdroppable
-    local.player iprint "You are infected!"
-end
-
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-getPlayerCount:
-    local.count = 0
-
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if ($player[local.i].inGame &&
-            $player[local.i].dmteam != spectator) {
-            local.count++
-        }
-    }
-
-    return local.count
-end
-
-getLeastSurvivorCount:
-    local.least = local.MAX_SURVIVOR_COUNT
-
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if ($player[local.i].survivalAmount != NIL) {
-            if ($player[local.i].survivalAmount < local.least) {
-                local.least = $player[local.i].survivalAmount
+// =====================================================================
+//  Spawn detection -> loadout (works for bots and humans)
+// =====================================================================
+player_manager:
+    while (1)
+    {
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.p = $player[local.i]
+            if (!local.p.sh_managed)
+            {
+                local.p.sh_managed = 1
+                local.p thread player_life
             }
         }
-    }
-
-    return local.least
-end
-
-selectFairestPlayer local.previousPlayer:
-    local.leastCount = getLeastSurvivorCount
-    local.attempts = 0
-    local.maxAttempts = 100
-
-    // Find random player with least survivor turns
-    while (local.attempts < local.maxAttempts) {
-        local.candidate = $player[randomint($player.size) + 1]
-
-        // Valid if: different from previous, not spectator, has least count
-        if (local.candidate != local.previousPlayer &&
-            local.candidate.dmteam != spectator &&
-            local.candidate.survivalAmount != NIL &&
-            local.candidate.survivalAmount <= local.leastCount) {
-            return local.candidate
-        }
-
-        local.attempts++
-        waitframe
-    }
-
-    // Fallback: return any valid player
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if ($player[local.i] != local.previousPlayer &&
-            $player[local.i].dmteam != spectator &&
-            $player[local.i].inGame) {
-            return $player[local.i]
-        }
-    }
-
-    return NIL
-end
-
-forcePlayerToSpawn local.player:
-    while (!isAlive(local.player)) {
-        local.player stufftext "+attackprimary"
-        waitframe
-        local.player stufftext "-attackprimary"
-        waitframe
-    }
-end
-
-checkProximity local.survivor:
-    // Find closest infected player to survivor
-    local.closestDistance = 999999
-    local.closestInfected = NIL
-    
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if (!$player[local.i].inGame) continue
-        if ($player[local.i].dmteam != axis) continue
-        
-        local.distance = vector_length($player[local.i].origin - local.survivor.origin)
-        
-        if (local.distance < local.closestDistance) {
-            local.closestDistance = local.distance
-            local.closestInfected = $player[local.i]
-        }
-    }
-    
-    // If no infected players found, skip
-    if (local.closestInfected == NIL) {
-        end
-    }
-    
-    // Check if within "hot" range (10m) - reset timer
-    if (local.closestDistance <= local.PROXIMITY_HOT) {
-        level.lastProximityTime = level.time
-        
-        // Clear any previous proximity indicators
-        if (level.proximityTrigger == 1) {
-            level.proximityTrigger = 0
-        }
-        end
-    }
-    
-    // Check if we should show proximity indicators (after 1 minute timeout)
-    local.timeSinceProximity = level.time - level.lastProximityTime
-    
-    if (local.timeSinceProximity < local.PROXIMITY_TIMEOUT) {
-        // Not enough time has passed, don't show indicators
-        end
-    }
-    
-    // Show graduated proximity messages based on distance
-    local.proximityMessage = ""
-    
-    if (local.closestDistance <= local.PROXIMITY_HOT) {
-        // Already handled above - within 10m resets timer
-        local.proximityMessage = "HOT"
-    } else if (local.closestDistance <= local.PROXIMITY_WARM) {
-        // 25m or less
-        local.proximityMessage = "WARM"
-    } else if (local.closestDistance <= local.PROXIMITY_COLD) {
-        // 50m or less
-        local.proximityMessage = "COLD"
-    } else if (local.closestDistance <= local.PROXIMITY_NONE) {
-        // Between 50m and 100m - no message
-        local.proximityMessage = ""
-    } else {
-        // Beyond 100m - no message
-        local.proximityMessage = ""
-    }
-    
-    // Display message to infected players if there's something to show
-    if (local.proximityMessage != "") {
-        // Only show message once per second to avoid spam
-        if (level.proximityTrigger == 0) {
-            for (local.i = 1; local.i <= $player.size; local.i++) {
-                if (!$player[local.i].inGame) continue
-                if ($player[local.i].dmteam != axis) continue
-                
-                $player[local.i] iprintln "Proximity: " + local.proximityMessage
-            }
-            
-            level.proximityTrigger = 1
-            thread resetProximityTrigger
-        }
-    } else {
-        // No message to show, clear trigger
-        level.proximityTrigger = 0
-    }
-end
-
-checkProximityAllSurvivors:
-    // Find closest survivor to any infected player
-    local.closestDistance = 999999
-    
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if (!$player[local.i].inGame) continue
-        if ($player[local.i].dmteam != allies) continue  // Only check survivors
-        
-        // Check distance to closest infected
-        for (local.j = 1; local.j <= $player.size; local.j++) {
-            if (!$player[local.j].inGame) continue
-            if ($player[local.j].dmteam != axis) continue  // Only check infected
-            
-            local.distance = vector_length($player[local.i].origin - $player[local.j].origin)
-            
-            if (local.distance < local.closestDistance) {
-                local.closestDistance = local.distance
-            }
-        }
-    }
-    
-    // Check if within "hot" range (10m) - reset timer
-    if (local.closestDistance <= local.PROXIMITY_HOT) {
-        level.lastProximityTime = level.time
-        
-        // Clear any previous proximity indicators
-        if (level.proximityTrigger == 1) {
-            level.proximityTrigger = 0
-        }
-        end
-    }
-    
-    // Check if we should show proximity indicators (after 1 minute timeout)
-    local.timeSinceProximity = level.time - level.lastProximityTime
-    
-    if (local.timeSinceProximity < local.PROXIMITY_TIMEOUT) {
-        // Not enough time has passed, don't show indicators
-        end
-    }
-    
-    // Show graduated proximity messages based on closest distance
-    local.proximityMessage = ""
-    
-    if (local.closestDistance <= local.PROXIMITY_HOT) {
-        // Already handled above - within 10m resets timer
-        local.proximityMessage = "HOT"
-    } else if (local.closestDistance <= local.PROXIMITY_WARM) {
-        // 25m or less
-        local.proximityMessage = "WARM"
-    } else if (local.closestDistance <= local.PROXIMITY_COLD) {
-        // 50m or less
-        local.proximityMessage = "COLD"
-    } else if (local.closestDistance <= local.PROXIMITY_NONE) {
-        // Between 50m and 100m - no message
-        local.proximityMessage = ""
-    } else {
-        // Beyond 100m - no message
-        local.proximityMessage = ""
-    }
-    
-    // Display message to infected players if there's something to show
-    if (local.proximityMessage != "") {
-        // Only show message once per second to avoid spam
-        if (level.proximityTrigger == 0) {
-            for (local.i = 1; local.i <= $player.size; local.i++) {
-                if (!$player[local.i].inGame) continue
-                if ($player[local.i].dmteam != axis) continue
-                
-                $player[local.i] iprintln "Proximity: " + local.proximityMessage
-            }
-            
-            level.proximityTrigger = 1
-            thread resetProximityTrigger
-        }
-    } else {
-        // No message to show, clear trigger
-        level.proximityTrigger = 0
-    }
-end
-
-resetProximityTrigger:
-    // Reset trigger after 1 second to allow next message
-    wait 1
-    level.proximityTrigger = 0
-end
-
-calculateSurvivalTime:
-    // Count infected players
-    local.infectedCount = 0
-    
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if ($player[local.i].inGame && 
-            $player[local.i].dmteam == axis &&
-            $player[local.i].dmteam != spectator) {
-            local.infectedCount++
-        }
-    }
-    
-    // Calculate time with 5% reduction per infected player
-    // Formula: baseTime * (1 - (infectedCount * reductionPercent / 100))
-    local.reductionFactor = local.infectedCount * local.TIME_REDUCTION_PERCENT
-    local.survivalTime = local.DEFAULT_SURVIVAL_TIME * (100 - local.reductionFactor) / 100
-    
-    // Enforce minimum time of 1 minute
-    if (local.survivalTime < local.MIN_SURVIVAL_TIME) {
-        local.survivalTime = local.MIN_SURVIVAL_TIME
-    }
-    
-    return local.survivalTime
-end
-
-
-// ============================================================================
-// SURVIVAL MODE (Mode 3)
-// ============================================================================
-
-gameLoopSurvival:
-    println "[28FL] Survival mode initialized"
-    wait 10
-
-    // Main game loop
-    while (1) {
-        // Initialize player thinkers
-        for (local.i = 1; local.i <= $player.size; local.i++) {
-            if (!$player[local.i].isDone) {
-                $player[local.i].isDone = 1
-                $player[local.i] thread playerThinker
-            }
-
-            // Enforce team rules
-            if (isAlive($player[local.i]) &&
-                $player[local.i].dmteam != spectator &&
-                $player[local.i] != level.survivor &&
-                $player[local.i].dmteam == allies &&
-                $player[local.i].inGame) {
-                $player[local.i] thread convertToInfected $player[local.i]
-            }
-
-            // Clean up dead/spectating players
-            if ((!isAlive($player[local.i]) || $player[local.i].dmteam == spectator) &&
-                $player[local.i].inGame) {
-                $player[local.i].isDone = 0
-                $player[local.i].inGame = 0
-            }
-        }
-
-        // Select survivor if needed
-        if (level.survivor == NIL || level.survivor == NULL) {
-            if (thread getPlayerCount >= local.MIN_PLAYERS) {
-                thread runSurvivalRound
-            }
-        }
-
-        waitframe
-    }
-end
-
-runSurvivalRound:
-    // Prevent concurrent selection
-    if (level.selectingSurvivor) {
-        end
-    }
-
-    local.playerCount = thread getPlayerCount
-    if (local.playerCount < local.MIN_PLAYERS) {
-        fadein 0 0 0 0 1
-        end
-    }
-
-    level.selectingSurvivor = 1
-    local.previousSurvivor = level.survivor
-
-    // Select new survivor
-    local.survivor = thread selectFairestPlayer local.previousSurvivor
-
-    if (local.survivor == NIL || local.survivor == NULL) {
-        level.selectingSurvivor = 0
-        end
-    }
-
-    local.survivor.survivalAmount++
-    level.survivor = local.survivor
-
-    // Wait for survivor to be in game
-    while (!level.survivor.inGame) {
-        waitframe
-    }
-
-    level.selectingSurvivor = 0
-    level.proximityTrigger = 0
-    level.lastProximityTime = level.time  // Initialize proximity tracking for new round
-
-    // Setup survivor
-    println "[28FL] Selected survivor: " + local.survivor.netname
-    thread spawnAsSurvivor local.survivor
-
-    // Calculate dynamic survival time based on infected player count
-    local.dynamicTime = thread calculateSurvivalTime
-    level.survivorTimelimit = local.dynamicTime
-    
-    // Display time adjustment to all players
-    local.infectedCount = 0
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if ($player[local.i].inGame && 
-            $player[local.i].dmteam == axis &&
-            $player[local.i].dmteam != spectator) {
-            local.infectedCount++
-        }
-    }
-    
-    local.minutes = int(local.dynamicTime / 60)
-    local.seconds = int(local.dynamicTime - (local.minutes * 60))
-    iprintlnbold_noloc "Survival time: " + local.minutes + "m " + local.seconds + "s (" + local.infectedCount + " infected)"
-
-    // Set expiry time
-    local.survivor.survivorExpiry = level.time + level.survivorTimelimit
-
-    // Main survivor loop
-    local.lastMin = -1
-    local.lastSec = -1
-    local.timeLimitHit = 0
-
-    while (isAlive(local.survivor) &&
-           level.survivor == local.survivor &&
-           local.survivor.dmteam == allies) {
-
-        // Update timer
-        local.timeLeft = local.survivor.survivorExpiry - level.time
-        local.min = int(local.timeLeft / 60)
-        local.sec = int(local.timeLeft - (local.min * 60))
-
-        if (local.sec != local.lastSec || local.min != local.lastMin) {
-            thread displayTimer local.survivor local.timeLeft
-            local.lastMin = local.min
-            local.lastSec = local.sec
-        }
-
-        // Check proximity to infected
-        thread checkProximity local.survivor
-
-        // Check time limit
-        if (level.time >= local.survivor.survivorExpiry) {
-            println "[28FL] Time limit reached"
-            local.timeLimitHit = 1
-            break
-        }
-
-        // Force non-survivors to spawn if needed
-        for (local.i = 1; local.i <= $player.size; local.i++) {
-            if (!$player[local.i].inGame &&
-                $player[local.i].dmteam != spectator) {
-                $player[local.i] stufftext "+attackprimary"
-                waitframe
-                $player[local.i] stufftext "-attackprimary"
-            }
-        }
-
-        waitframe
-    }
-
-    // Round ended
-    println "[28FL] Survivor round ended"
-
-    // Display result
-    if (local.timeLimitHit) {
-        iprintlnbold_noloc local.survivor.netname + " SURVIVED! Winner!"
-        local.survivor iprint "You won! You survived the infection!"
-    } else {
-        iprintlnbold_noloc "The Survivor has been infected!"
-    }
-
-    waitframe
-    fadeout 10 0 0 0 1
-    wait 5
-
-    iprintlnbold_noloc "Selecting new survivor..."
-
-    // Cleanup
-    local.survivor.isDone = 0
-    local.survivor.inGame = 0
-    thread hideTimer
-
-    // Force survivor to respawn as infected
-    thread forcePlayerToSpawn local.survivor
-
-    while (local.survivor.dmteam != axis) {
-        local.survivor join_team axis
-        local.survivor respawn
-        waitframe
-    }
-
-    local.survivor respawn
-    level.survivor = NIL
-end
-
-
-// ============================================================================
-// OUTBREAK MODE (Mode 1)
-// ============================================================================
-
-gameLoopOutbreak:
-    println "[28FL] Outbreak mode initialized"
-    println "[28FL] Multiple survivors, infection spreads on kill"
-
-    level.outbreakActive = 1
-    level.survivorCount = 3  // Start with 3 survivors
-
-    wait 10
-
-    while (1) {
-        // Initialize players
-        for (local.i = 1; local.i <= $player.size; local.i++) {
-            if (!$player[local.i].isDone) {
-                $player[local.i].isDone = 1
-                $player[local.i] thread playerThinker
-            }
-        }
-
-        local.playerCount = thread getPlayerCount
-
-        // Need enough players
-        if (local.playerCount < 4) {
-            iprintlnbold_noloc "Need at least 4 players for Outbreak mode"
-            wait 5
-            waitframe
-            continue
-        }
-
-        // Select initial survivors
-        if (level.outbreakSurvivors == NIL) {
-            thread selectOutbreakSurvivors
-            level.lastProximityTime = level.time  // Initialize proximity tracking
-        }
-        
-        // Check proximity if survivors are active
-        if (level.outbreakSurvivors != NIL) {
-            thread checkProximityAllSurvivors
-        }
-
-        waitframe
-    }
-end
-
-selectOutbreakSurvivors:
-    println "[28FL] Selecting " + level.survivorCount + " survivors for Outbreak"
-
-    level.outbreakSurvivors = []
-    local.selected = 0
-
-    // Randomly select survivors
-    while (local.selected < level.survivorCount) {
-        local.candidate = $player[randomint($player.size) + 1]
-
-        if (local.candidate.inGame &&
-            local.candidate.dmteam != spectator &&
-            !isInArray(level.outbreakSurvivors, local.candidate)) {
-
-            level.outbreakSurvivors[local.selected] = local.candidate
-            thread spawnAsSurvivor local.candidate
-            local.candidate iprint "You are a survivor! Work together!"
-
-            local.selected++
-        }
-
-        waitframe
-    }
-
-    iprintlnbold_noloc level.survivorCount + " survivors selected. Infected must eliminate them all!"
-end
-
-
-// ============================================================================
-// INFECTION MODE (Mode 2)
-// ============================================================================
-
-gameLoopInfection:
-    println "[28FL] Infection mode initialized"
-    println "[28FL] First infected must infect all survivors"
-
-    level.infectionActive = 1
-    level.infectionRoundStarted = 0
-
-    wait 10
-
-    while (1) {
-        // Initialize players
-        for (local.i = 1; local.i <= $player.size; local.i++) {
-            if (!$player[local.i].isDone) {
-                $player[local.i].isDone = 1
-                $player[local.i] thread playerThinker
-            }
-            
-            // Initialize infection marker
-            if ($player[local.i].needsInfection == NIL) {
-                $player[local.i].needsInfection = 0
-            }
-        }
-
-        local.playerCount = thread getPlayerCount
-
-        if (local.playerCount < local.MIN_PLAYERS) {
-            wait 5
-            waitframe
-            continue
-        }
-
-        // Select patient zero if needed
-        if (level.patientZero == NIL) {
-            thread selectPatientZero
-            
-            // Start round with timer
-            level.infectionRoundStarted = 1
-            level.infectionRoundExpiry = level.time + local.INFECTION_TIME_LIMIT
-            level.lastProximityTime = level.time  // Initialize proximity tracking
-            
-            // Display round start message
-            iprintlnbold_noloc "Infection round started! 5 minutes to survive!"
-            
-            // Start death monitoring
-            thread monitorInfectionDeaths
-            
-            // Start timer display
-            thread displayInfectionTimer
-        }
-
-        // Monitor infection spread
-        thread monitorInfection
-        
-        // Check proximity if round is active
-        if (level.infectionRoundStarted) {
-            thread checkProximityAllSurvivors
-        }
-
-        waitframe
-    }
-end
-
-selectPatientZero:
-    println "[28FL] Selecting Patient Zero"
-
-    local.infected = thread selectFairestPlayer NIL
-
-    if (local.infected == NIL) {
-        end
-    }
-
-    level.patientZero = local.infected
-    local.infected.infectionAmount++
-
-    // Make everyone survivors except patient zero - all get pistols
-    for (local.i = 1; local.i <= $player.size; local.i++) {
-        if ($player[local.i].inGame && $player[local.i].dmteam != spectator) {
-            if ($player[local.i] == local.infected) {
-                thread spawnAsInfected $player[local.i]
-                $player[local.i] iprint "You are Patient Zero! Infect everyone!"
-            } else {
-                thread spawnAsSurvivorWithPistol $player[local.i]
-                $player[local.i] iprint "You are a survivor! Avoid infection!"
-            }
-        }
-    }
-
-    iprintlnbold_noloc local.infected.netname + " is Patient Zero!"
-end
-
-monitorInfection:
-    while (level.infectionActive) {
-        // Check if all survivors are infected
-        local.survivorCount = 0
-        local.infectedCount = 0
-
-        for (local.i = 1; local.i <= $player.size; local.i++) {
-            if ($player[local.i].inGame && isAlive($player[local.i])) {
-                if ($player[local.i].dmteam == allies) {
-                    local.survivorCount++
-                } else if ($player[local.i].dmteam == axis) {
-                    local.infectedCount++
-                }
-            }
-        }
-
-        // Check win conditions
-        if (local.survivorCount == 0 && local.infectedCount > 0) {
-            iprintlnbold_noloc "All survivors have been infected!"
-            level.patientZero = NIL
-            level.infectionActive = 0
-            level.infectionRoundStarted = 0
-            wait 10
-            level.infectionActive = 1
-            break
-        }
-
         wait 1
     }
 end
 
-monitorInfectionDeaths:
-    // Monitor for survivor deaths and convert them to infected
-    while (level.infectionActive && level.infectionRoundStarted) {
-        for (local.i = 1; local.i <= $player.size; local.i++) {
-            // Check if survivor died and needs conversion
-            if ($player[local.i].inGame && 
-                !isAlive($player[local.i]) && 
-                $player[local.i].dmteam == allies &&
-                $player[local.i] != level.patientZero) {
-                
-                // Mark player for conversion on next spawn
-                $player[local.i].needsInfection = 1
-            }
-            
-            // Convert respawned survivors to infected
-            if ($player[local.i].inGame && 
-                isAlive($player[local.i]) &&
-                $player[local.i].dmteam == allies &&
-                $player[local.i].needsInfection == 1 &&
-                $player[local.i] != level.patientZero) {
-                
-                $player[local.i].needsInfection = 0
-                thread convertToInfected $player[local.i]
-                $player[local.i] iprint "You have been infected!"
-            }
+player_life:
+    while (1)
+    {
+        if (isAlive(self) && !self.sh_set)
+        {
+            self.sh_set = 1
+            self thread setup_player
         }
-        
-        waitframe
+        if (!isAlive(self))
+            self.sh_set = 0
+        wait 0.4
     }
 end
 
+setup_player:
+    wait 0.1
+    self takeall
+    local.isSurv = 0
+    if (!isBot(self) && self.dmteam == "allies")
+        local.isSurv = 1
 
-// ============================================================================
-// END OF SCRIPT
-// ============================================================================
+    if (local.isSurv)
+    {
+        // Survivor. Infection mode = pistol; otherwise a shotgun.
+        if (level.gameMode == 2)
+        {
+            self item "models/weapons/colt45.tik"
+            self useweaponclass pistol
+        }
+        else
+        {
+            self item "models/weapons/shotgun.tik"
+            self useweaponclass heavy
+        }
+        self.health = 200
+        self stufftext "dm_playermodel allied_Magna_Cartas_police"
+    }
+    else
+    {
+        // Infected (bot OR non-survivor human). Engine keeps the colt45 dry
+        // (g_infected_disarm) so it falls back to its melee secondary.
+        self item "models/weapons/colt45.tik"
+        if (!isBot(self))
+            self stufftext "dm_playergermanmodel german_zombie"
+    }
+end
+
+// Bots are ALWAYS the infected horde.
+bot_enforcer:
+    while (1)
+    {
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            if (isBot($player[local.i]) && $player[local.i].dmteam != "axis")
+                $player[local.i] setteam axis
+        }
+        wait 0.5
+    }
+end
+
+// =====================================================================
+//  Helpers
+// =====================================================================
+countInfected:
+    local.n = 0
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if ($player[local.i].dmteam == "axis")
+            local.n++
+    }
+    end local.n
+end
+
+countHumansAlive:
+    local.n = 0
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if (!isBot($player[local.i]) && isAlive($player[local.i]))
+            local.n++
+    }
+    end local.n
+end
+
+// Fair pick: a living human with the fewest previous survivor turns.
+pickFairSurvivor:
+    local.least = 999999
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (!isBot(local.p) && isAlive(local.p))
+        {
+            local.amt = local.p.survivalAmount
+            if (local.amt == NIL)
+                local.amt = 0
+            if (local.amt < local.least)
+                local.least = local.amt
+        }
+    }
+    local.tries = 0
+    while (local.tries < 60)
+    {
+        local.c = $player[randomint($player.size) + 1]
+        if (!isBot(local.c) && isAlive(local.c))
+        {
+            local.amt = local.c.survivalAmount
+            if (local.amt == NIL)
+                local.amt = 0
+            if (local.amt <= local.least)
+                end local.c
+        }
+        local.tries++
+        waitframe
+    }
+    // fallback: first living human
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if (!isBot($player[local.i]) && isAlive($player[local.i]))
+            end $player[local.i]
+    }
+    end NIL
+end
+
+secStr local.n:
+    local.s = ""
+    if (local.n < 10)
+        local.s = "0"
+    local.s = local.s + string(local.n)
+    end local.s
+end
+
+// =====================================================================
+//  MODE 3 - SURVIVAL  (one rotating survivor, dynamic timer, survive to win)
+// =====================================================================
+mode_survival:
+    level.28fl_expiry = 0
+    wait 8
+    while (1)
+    {
+        local.hasSurvivor = 0
+        local.survName = "---"
+        // one living human survivor; dead/extra allies -> infected
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.p = $player[local.i]
+            if (!isBot(local.p) && local.p.dmteam == "allies")
+            {
+                if (isAlive(local.p) && local.hasSurvivor == 0)
+                {
+                    local.hasSurvivor = 1
+                    local.survName = local.p.netname
+                }
+                else
+                    local.p setteam axis
+            }
+        }
+        // WIN: survivor outlasted the timer
+        if (local.hasSurvivor == 1 && level.28fl_expiry > 0 && level.time >= level.28fl_expiry)
+        {
+            iprintlnbold_noloc (local.survName + " SURVIVED THE ROUND  -  Winner!")
+            for (local.i = 1; local.i <= $player.size; local.i++)
+            {
+                if (!isBot($player[local.i]) && $player[local.i].dmteam == "allies")
+                    $player[local.i] setteam axis
+            }
+            local.hasSurvivor = 0
+            level.28fl_expiry = 0
+        }
+        // pick a new survivor if none
+        if (local.hasSurvivor == 0)
+        {
+            if (level.28fl_expiry > 0)
+                iprintlnbold_noloc "The Survivor was infected!  Choosing another..."
+            level.28fl_expiry = 0
+            local.s = waitthread pickFairSurvivor
+            if (local.s != NIL)
+            {
+                if (local.s.survivalAmount == NIL)
+                    local.s.survivalAmount = 0
+                local.s.survivalAmount = local.s.survivalAmount + 1
+                local.s setteam allies
+                local.inf = waitthread countInfected
+                local.tl = 300 * (100 - (local.inf * 5)) / 100
+                if (local.tl < 60)
+                    local.tl = 60
+                level.28fl_expiry = level.time + local.tl
+                local.hasSurvivor = 1
+                local.survName = local.s.netname
+                local.mm = int(local.tl / 60)
+                local.rem = local.tl % 60
+                local.ss = waitthread secStr local.rem
+                iprintlnbold_noloc (local.s.netname + " is the SURVIVOR  -  outlast " + string(local.mm) + ":" + local.ss + "  (" + string(local.inf) + " infected)")
+            }
+        }
+        level.28fl_survalive = local.hasSurvivor
+        level.28fl_survname = local.survName
+        wait 0.5
+    }
+end
+
+// =====================================================================
+//  MODE 1 - OUTBREAK  (up to 3 co-op survivors, last team standing)
+// =====================================================================
+mode_outbreak:
+    level.28fl_ob_active = 0
+    wait 8
+    while (1)
+    {
+        // count living survivors; dead survivors -> infected
+        local.alive = 0
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.p = $player[local.i]
+            if (!isBot(local.p) && local.p.dmteam == "allies")
+            {
+                if (local.p.obSurv == 1 && isAlive(local.p))
+                    local.alive++
+                else
+                {
+                    // dead survivor, or a stray/late-joiner on allies -> infected
+                    local.p.obSurv = 0
+                    local.p setteam axis
+                }
+            }
+        }
+
+        if (level.28fl_ob_active == 1 && local.alive == 0)
+        {
+            iprintlnbold_noloc "All Survivors infected  -  the horde wins!"
+            level.28fl_ob_active = 0
+            wait 6
+        }
+
+        if (level.28fl_ob_active == 0)
+        {
+            local.got = waitthread selectOutbreak
+            if (local.got > 0)
+            {
+                level.28fl_ob_active = 1
+                iprintlnbold_noloc (string(local.got) + " SURVIVORS chosen  -  work together, stay alive!")
+                local.alive = local.got
+            }
+        }
+
+        level.28fl_survalive = 0
+        if (local.alive > 0)
+            level.28fl_survalive = 1
+        level.28fl_survname = "TEAM x" + string(local.alive)
+        wait 0.5
+    }
+end
+
+selectOutbreak:
+    // reset everyone to infected first
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if (!isBot($player[local.i]))
+        {
+            $player[local.i].obSurv = 0
+            if ($player[local.i].dmteam == "allies")
+                $player[local.i] setteam axis
+        }
+    }
+    local.count = 0
+    local.tries = 0
+    while (local.count < 3 && local.tries < 100)
+    {
+        local.c = $player[randomint($player.size) + 1]
+        if (!isBot(local.c) && isAlive(local.c) && local.c.obSurv != 1)
+        {
+            local.c.obSurv = 1
+            local.c setteam allies
+            local.c iprint "You are a SURVIVOR - work together!"
+            local.count++
+        }
+        local.tries++
+        waitframe
+    }
+    end local.count
+end
+
+// =====================================================================
+//  MODE 2 - INFECTION  (all survivors + pistols, killed -> infected, 5 min)
+// =====================================================================
+mode_infection:
+    level.28fl_inf_active = 0
+    level.28fl_inf_expiry = 0
+    wait 8
+    while (1)
+    {
+        if (level.28fl_inf_active == 0)
+        {
+            local.h = waitthread countHumansAlive
+            if (local.h >= 1)
+            {
+                for (local.i = 1; local.i <= $player.size; local.i++)
+                {
+                    local.p = $player[local.i]
+                    if (!isBot(local.p) && isAlive(local.p))
+                    {
+                        local.p.infSurv = 1
+                        local.p.infDead = 0
+                        if (local.p.dmteam != "allies")
+                            local.p setteam allies
+                    }
+                }
+                level.28fl_inf_active = 1
+                level.28fl_inf_expiry = level.time + 300
+                iprintlnbold_noloc "INFECTION OUTBREAK!  Survive 5 minutes - don't get touched!"
+            }
+        }
+        else
+        {
+            local.sv = 0
+            for (local.i = 1; local.i <= $player.size; local.i++)
+            {
+                local.p = $player[local.i]
+                if (!isBot(local.p))
+                {
+                    if (local.p.dmteam == "allies" && local.p.infSurv == 1)
+                    {
+                        if (!isAlive(local.p))
+                            local.p.infDead = 1
+                        else if (local.p.infDead == 1)
+                        {
+                            // respawned after dying -> infect now
+                            local.p.infDead = 0
+                            local.p.infSurv = 0
+                            local.p setteam axis
+                            local.p iprint "You have been INFECTED!"
+                        }
+                        else
+                            local.sv++
+                    }
+                    else if (local.p.dmteam == "allies" && local.p.infSurv != 1)
+                    {
+                        // late joiner -> infected
+                        local.p setteam axis
+                    }
+                }
+            }
+
+            level.28fl_survalive = 0
+            if (local.sv > 0)
+                level.28fl_survalive = 1
+            level.28fl_survname = "SURVIVORS x" + string(local.sv)
+
+            if (level.time >= level.28fl_inf_expiry)
+            {
+                iprintlnbold_noloc "TIME UP  -  the Survivors made it. Survivors win!"
+                level.28fl_inf_active = 0
+                wait 6
+            }
+            else if (local.sv == 0)
+            {
+                iprintlnbold_noloc "Everyone has been infected  -  the outbreak wins!"
+                level.28fl_inf_active = 0
+                wait 6
+            }
+        }
+        wait 0.5
+    }
+end
+
+// =====================================================================
+//  Session survivor leaderboard (totals across the whole rotation)
+// =====================================================================
+winner_tally:
+    if (game.wcount == NIL)
+        game.wcount = 0
+    while (1)
+    {
+        wait 1
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.p = $player[local.i]
+            if (!isBot(local.p) && local.p.dmteam == "allies" && isAlive(local.p))
+            {
+                local.idx = 0
+                for (local.k = 1; local.k <= game.wcount; local.k++)
+                {
+                    if (game.wname[local.k] == local.p.netname)
+                        local.idx = local.k
+                }
+                if (local.idx == 0)
+                {
+                    game.wcount = game.wcount + 1
+                    local.idx = game.wcount
+                    game.wname[local.idx] = local.p.netname
+                    game.wsecs[local.idx] = 0
+                }
+                game.wsecs[local.idx] = game.wsecs[local.idx] + 1
+            }
+        }
+    }
+end
+
+announce_winner:
+    if (game.wcount == NIL || game.wcount == 0)
+    {
+        iprintlnbold_noloc "No survivor times recorded yet."
+        end
+    }
+    local.best = -1
+    local.bestName = "nobody"
+    for (local.k = 1; local.k <= game.wcount; local.k++)
+    {
+        if (game.wsecs[local.k] > local.best)
+        {
+            local.best = game.wsecs[local.k]
+            local.bestName = game.wname[local.k]
+        }
+    }
+    local.mm = int(local.best / 60)
+    local.rem = local.best % 60
+    local.ss = waitthread secStr local.rem
+    iprintlnbold_noloc ("*** SESSION LEADER: " + local.bestName + "  -  " + string(local.mm) + ":" + local.ss + " survived total ***")
+end
+
+// =====================================================================
+//  HUD banner
+// =====================================================================
+score_hud:
+    wait 3
+    while (1)
+    {
+        local.infected = waitthread countInfected
+        if (level.28fl_survalive == 1)
+            level.28fl_survtime = level.28fl_survtime + 1
+        else
+            level.28fl_survtime = 0
+
+        local.mm = int(level.28fl_survtime / 60)
+        local.rem = level.28fl_survtime % 60
+        local.ss = waitthread secStr local.rem
+        local.tstr = string(local.mm) + ":" + local.ss
+
+        huddraw_align 108 left top
+        huddraw_virtualsize 108 1
+        huddraw_rect 108 150 8 480 20
+        huddraw_color 108 1 0.25 0.25
+        huddraw_alpha 108 1
+        huddraw_font 108 facfont-20
+        huddraw_string 108 ("[" + level.28fl_modeName + "]  " + level.28fl_survname + "   TIME " + local.tstr + "   Infected " + string(local.infected))
+        wait 1
+    }
+end
+
+// =====================================================================
+//  Atmosphere
+// =====================================================================
+storm:
+    while (1)
+    {
+        wait (10 + randomint(14))
+        $world farplane_color ( 0.85 0.85 0.9 )
+        $world playsound thunder1
+        wait 0.1
+        $world farplane_color ( 0.12 0.12 0.14 )
+    }
+end
+
+creepy_sounds:
+    wait 6
+    while (1)
+    {
+        local.n = randomint(4) + 1
+        if (local.n == 1)
+            $world playsound creak1
+        if (local.n == 2)
+            $world playsound creak2
+        if (local.n == 3)
+            $world playsound snap1
+        if (local.n == 4)
+            $world playsound snap2
+        wait (7 + randomint(12))
+    }
+end
+
+dynamic_music:
+    local.music[1] = "sound/music/mus_06a_mystery.mp3"
+    local.music[2] = "sound/music/mus_15a_mystery.mp3"
+    local.music[3] = "sound/music/mus_16a_mystery.mp3"
+    wait 4
+    while (1)
+    {
+        local.num = randomint(3) + 1
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            if (!isBot($player[local.i]))
+                $player[local.i] stufftext ("tmstop;tmstart " + local.music[local.num])
+        }
+        wait 200
+    }
+end
+
+telemetry:
+    wait 5
+    while (1)
+    {
+        println ("[28FL_TELEMETRY] mode=" + string(level.gameMode) + " players=" + string($player.size) + " survalive=" + string(level.28fl_survalive) + " survtime=" + string(level.28fl_survtime))
+        wait 15
+    }
+end

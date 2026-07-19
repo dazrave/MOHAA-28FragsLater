@@ -1,0 +1,30 @@
+// ===== DazRave 28 Frags Later - Bot Test Server =====
+seta sv_hostname "DazRave 28FL Bot Test"
+seta g_gametype "2"          // 2 = Team Deathmatch
+seta sv_maxclients "20"
+seta sv_maxbots "12"         // reserve up to 10 bot slots
+seta sv_numbots "9"          // spawn 6 bots
+seta g_botmodel_german "german_zombie"
+seta g_infected_speed "1.35"   // infected sprint 35%% faster
+seta g_infected_disarm "1"   // 1 = zombies melee-only (no ammo, ever)
+seta g_infected_herd "1"     // 1 = idle zombies herd toward a human infected leader
+seta sv_minPlayers "0"
+seta 28fragslater_mode "0"      // 0=Survival (1 human survivor vs infected bots)
+seta 28fragslater_timelimit "200"
+seta g_teamdamage "0"           // no friendly fire (survivor not shot by own team)
+seta g_friendlyfire "0"
+seta timelimit "0"
+seta fraglimit "0"
+seta sv_pure "0"
+seta g_allowvote "1"
+seta g_forceready "1"
+
+// let clients connect freely on LAN
+seta sv_privateClients "0"
+set rconpassword "dazrave"
+
+// start map (stock map for connectivity test)
+set g_gametype "2"
+map dm/lowdownmall2
+seta g_28fl_rot "0"
+seta g_28fl_mode "0"
